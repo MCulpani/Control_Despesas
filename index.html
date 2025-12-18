@@ -43,20 +43,20 @@ canvas{max-height:240px;background:#020617;border-radius:12px;padding:6px}
 <section id="cadastro" class="card">
 <h3>Cadastro de Despesa</h3>
 <div class="grid">
-  <div><label>Razão Social Prestador</label><input id="Razão Social Prestador"></div>
-  <div><label>NF Cliente</label><input id="NF Cliente"></div>
-  <div><label>UF</label><input id="UF"></div>
-  <div><label>Valor da NF-s</label><input type="number" id="valor da NFS-s" step="0.01"></div>
-  <div><label>Valor por DT</label><input type="number" id="valor por DT" step="0.01"></div>
-  <div><label>Tipo de veículo</label><select id="categoria"><option>Truck</option><option>Carreta</option><option>Bitrem</option><option>N/A</option></select></div>
-  <div><label>Número DT</label><input id="DT"></div>
-  <div><label>Data Vencimento</label><input type="date" id="data"></div>
-  <div><label>Cliente</label><input id="Nome do cliente"></div>
-  <div><label>Tipo de Serviço</label><select id="Tipo de serviço"><option>Taxa de Desembarque</option><option>Taxa de Embarque</option><option>Armazenagem</option><option>Travessia de Balsa</option><option>Descarga Manual</option><option>Redespacho</option><option>Descarga Maquinário</option></select></div>
-  <div><label>Embutimento?</label><select id="Embutimento?"><option>Sim</option><option>Não</option></select></div>
-  <div><label>Motivo?</label><select id="Motivo?"><option>Sim</option><option>Não</option></select></div>
-  <div><label>Fato gerador</label><input id="Fato gerador"></div>
-  <div><label>Observações</label><input id="Observações"></div>
+  <div><label>Razão Social Prestador</label><input id="razao"></div>
+  <div><label>NF Cliente</label><input id="nfCliente"></div>
+  <div><label>UF</label><input id="uf"></div>
+  <div><label>Valor da NF-s</label><input type="number" id="valorNFS" step="0.01"></div>
+  <div><label>Valor por DT</label><input type="number" id="valorDT" step="0.01"></div>
+  <div><label>Tipo de veículo</label><select id="tipoVeiculo"><option>Truck</option><option>Carreta</option><option>Bitrem</option><option>N/A</option></select></div>
+  <div><label>Número DT</label><input id="numeroDT"></div>
+  <div><label>Data Vencimento</label><input type="date" id="dataVencimento"></div>
+  <div><label>Cliente</label><input id="cliente"></div>
+  <div><label>Tipo de Serviço</label><select id="tipoServico"><option>Taxa de Desembarque</option><option>Taxa de Embarque</option><option>Armazenagem</option><option>Travessia de Balsa</option><option>Descarga Manual</option><option>Redespacho</option><option>Descarga Maquinário</option></select></div>
+  <div><label>Embutimento?</label><select id="embutimento"><option>Sim</option><option>Não</option></select></div>
+  <div><label>Motivo?</label><select id="motivo"><option>Sim</option><option>Não</option></select></div>
+  <div><label>Fato gerador</label><input id="fatoGerador"></div>
+  <div><label>Observações</label><input id="observacoes"></div>
   <div><label>Status</label><select id="status"><option>Pendente</option><option>Aprovado</option></select></div>
   <div><label>Nota fiscal (PDF)</label><input type="file" id="nota" accept="application/pdf"></div>
 </div>
@@ -68,59 +68,59 @@ canvas{max-height:240px;background:#020617;border-radius:12px;padding:6px}
 <button onclick="exportarExcel()">📥 Excel</button>
 <button onclick="exportarPDF()">📄 PDF</button>
 <table>
-<thead><tr><th>Razão Social Prestador</th><th>NF Cliente</th><th>UF</th><th>Valor da NF-s</th><th>Valor por DT</th><th>Tipo de Veículo</th><th>Número DT</th><th>Data Vencimento</th><th>Cliente</th><th>Tipo de Serviço</th><th>Embutimento?</th><th>Motivo?</th><th>Fato Gerador</th><th>Observações</th><th>Status</th><th>PDF</th></tr></thead>
+<thead>
+<tr>
+<th>Razão Social</th><th>NF Cliente</th><th>UF</th><th>Valor NF</th><th>Valor DT</th>
+<th>Veículo</th><th>DT</th><th>Vencimento</th><th>Cliente</th><th>Serviço</th>
+<th>Embut.</th><th>Motivo</th><th>Fato Gerador</th><th>Observações</th><th>Status</th><th>PDF</th>
+</tr>
+</thead>
 <tbody id="tbody"></tbody>
 </table>
 </section>
 
 <section id="relatorios" class="card" style="display:none">
 <h3>Relatórios</h3>
-<div class="grid">
-  <div><label>Mês</label><input type="month" id="fMes"></div>
-  <div><label>Categoria</label><select id="fCategoria"><option value="">Todas</option></select></div>
-  <div><label>Centro</label><select id="fCentro"><option value="">Todos</option></select></div>
-</div>
-<button class="action" onclick="gerarGraficos()">Aplicar filtros</button>
-<div class="grid" style="margin-top:20px">
-  <canvas id="gMes"></canvas>
-  <canvas id="gCat"></canvas>
-  <canvas id="gCentro"></canvas>
-</div>
+<p style="color:#9ca3af">(relatórios serão baseados nos valores salvos)</p>
 </section>
 
 </main>
 
 <script>
 let despesas = JSON.parse(localStorage.getItem('despesas')) || [];
-let g1=null,g2=null,g3=null;
 
 function showSection(id){
   document.querySelectorAll('section').forEach(s=>s.style.display='none');
-  const el=document.getElementById(id);
-  if(el) el.style.display='block';
+  document.getElementById(id).style.display='block';
   if(id==='lista') renderTabela();
-  if(id==='relatorios') carregarFiltros();
 }
 
 function salvarDespesa(){
   const file=document.getElementById('nota').files[0];
   if(!file) return alert('Anexe o PDF');
+
   const r=new FileReader();
   r.onload=()=>{
-    const dt=new Date(data.value);
-    const pasta=`${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${centro.value}`;
     despesas.push({
-      data:data.value,
-      mes:data.value.slice(0,7),
-      categoria:categoria.value,
-      centro:centro.value,
-      valor:+valor.value,
+      razao:razao.value,
+      nfCliente:nfCliente.value,
+      uf:uf.value,
+      valorNFS:valorNFS.value,
+      valorDT:valorDT.value,
+      tipoVeiculo:tipoVeiculo.value,
+      numeroDT:numeroDT.value,
+      dataVencimento:dataVencimento.value,
+      cliente:cliente.value,
+      tipoServico:tipoServico.value,
+      embutimento:embutimento.value,
+      motivo:motivo.value,
+      fatoGerador:fatoGerador.value,
+      observacoes:observacoes.value,
       status:status.value,
-      pastaPDF:pasta,
       nota:r.result
     });
     localStorage.setItem('despesas',JSON.stringify(despesas));
-    alert('Salvo em '+pasta);
+    alert('Despesa salva com sucesso');
   };
   r.readAsDataURL(file);
 }
@@ -129,35 +129,15 @@ function renderTabela(){
   tbody.innerHTML='';
   despesas.forEach(d=>{
     tbody.innerHTML+=`<tr>
-      <td>${d.data}</td>
-      <td>${d.categoria}</td>
-      <td>${d.centro}</td>
-      <td>R$ ${d.valor.toFixed(2)}</td>
+      <td>${d.razao}</td><td>${d.nfCliente}</td><td>${d.uf}</td>
+      <td>${d.valorNFS}</td><td>${d.valorDT}</td><td>${d.tipoVeiculo}</td>
+      <td>${d.numeroDT}</td><td>${d.dataVencimento}</td><td>${d.cliente}</td>
+      <td>${d.tipoServico}</td><td>${d.embutimento}</td><td>${d.motivo}</td>
+      <td>${d.fatoGerador}</td><td>${d.observacoes}</td>
       <td><span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span></td>
       <td><a href="${d.nota}" target="_blank">PDF</a></td>
     </tr>`;
   });
-}
-
-function carregarFiltros(){
-  fCategoria.innerHTML='<option value="">Todas</option>';
-  fCentro.innerHTML='<option value="">Todos</option>';
-  [...new Set(despesas.map(d=>d.categoria))].forEach(c=>fCategoria.innerHTML+=`<option>${c}</option>`);
-  [...new Set(despesas.map(d=>d.centro))].forEach(c=>fCentro.innerHTML+=`<option>${c}</option>`);
-}
-
-function gerarGraficos(){
-  let dados=despesas.filter(d=>(!fMes.value||d.mes===fMes.value)&&(!fCategoria.value||d.categoria===fCategoria.value)&&(!fCentro.value||d.centro===fCentro.value));
-
-  const porMes=dados.reduce((a,d)=>{a[d.mes]=(a[d.mes]||0)+d.valor;return a;},{});
-  const porCat=dados.reduce((a,d)=>{a[d.categoria]=(a[d.categoria]||0)+d.valor;return a;},{});
-  const porCentro=dados.reduce((a,d)=>{a[d.centro]=(a[d.centro]||0)+d.valor;return a;},{});
-
-  if(g1) g1.destroy(); if(g2) g2.destroy(); if(g3) g3.destroy();
-
-  g1=new Chart(gMes,{type:'bar',data:{labels:Object.keys(porMes),datasets:[{data:Object.values(porMes)}]},options:{maintainAspectRatio:false}});
-  g2=new Chart(gCat,{type:'pie',data:{labels:Object.keys(porCat),datasets:[{data:Object.values(porCat)}]},options:{maintainAspectRatio:false}});
-  g3=new Chart(gCentro,{type:'doughnut',data:{labels:Object.keys(porCentro),datasets:[{data:Object.values(porCentro)}]},options:{maintainAspectRatio:false}});
 }
 
 function exportarExcel(){
@@ -168,9 +148,9 @@ function exportarExcel(){
 }
 
 function exportarPDF(){
-  const {jsPDF}=window.jspdf;const pdf=new jsPDF();let y=10;
-  pdf.text('Relatório de Despesas',10,y);y+=10;
-  despesas.forEach(d=>{pdf.text(`${d.data} | ${d.categoria} | ${d.centro} | R$ ${d.valor}`,10,y);y+=8});
+  const {jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:'landscape'});
+  let y=10;pdf.text('Relatório de Despesas',10,y);y+=10;
+  despesas.forEach(d=>{pdf.text(`${d.razao} | ${d.nfCliente} | ${d.valorNFS}`,10,y);y+=8});
   pdf.save('despesas.pdf');
 }
 </script>
