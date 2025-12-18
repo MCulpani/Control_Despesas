@@ -112,13 +112,26 @@
 let despesas = JSON.parse(localStorage.getItem('despesas')) || [];
 
 window.onload=()=>{
+  if(!document.getElementById('filtroCategoria')) return;
   const cats=[...new Set(despesas.map(d=>d.categoria))];
   const cens=[...new Set(despesas.map(d=>d.centro))];
-  cats.forEach(c=>filtroCategoria.innerHTML+=`<option>${c}</option>`);
+  cats.forEach(c=>{
+    const o=document.createElement('option');o.value=c;o.textContent=c;filtroCategoria.appendChild(o);
+  });
+  cens.forEach(c=>{
+    const o=document.createElement('option');o.value=c;o.textContent=c;filtroCentro.appendChild(o);
+  });
+}</option>`);
   cens.forEach(c=>filtroCentro.innerHTML+=`<option>${c}</option>`);
 }(localStorage.getItem('despesas')) || [];
 
-function show(id){document.querySelectorAll('section').forEach(s=>s.style.display='none');document.getElementById(id).style.display='block';if(id==='lista')render();if(id==='relatorios')graficos()}
+function show(id){
+  document.querySelectorAll('section').forEach(s=>s.style.display='none');
+  const alvo=document.getElementById(id);
+  if(alvo) alvo.style.display='block';
+  if(id==='lista') render();
+  if(id==='relatorios') graficos();
+}
 
 function salvar(){
   const f = nota.files[0];
@@ -163,9 +176,10 @@ function agrupar(campo){
 }
 
 function graficos(){
-  const mes = filtroMes.value;
-  const cat = filtroCategoria.value;
-  const cen = filtroCentro.value;
+  if(!document.getElementById('grafMes')) return;
+  const mes = document.getElementById('filtroMes').value;
+  const cat = document.getElementById('filtroCategoria').value;
+  const cen = document.getElementById('filtroCentro').value;
 
   let dados = despesas.filter(d=>
     (!mes || d.mes===mes) &&
@@ -174,6 +188,31 @@ function graficos(){
   );
 
   const porMes = dados.reduce((a,d)=>{a[d.mes]=(a[d.mes]||0)+d.valor;return a;},{});
+  const porCat = dados.reduce((a,d)=>{a[d.categoria]=(a[d.categoria]||0)+d.valor;return a;},{});
+  const porCentro = dados.reduce((a,d)=>{a[d.centro]=(a[d.centro]||0)+d.valor;return a;},{});
+
+  if(window.g1) g1.destroy();
+  if(window.g2) g2.destroy();
+  if(window.g3) g3.destroy();
+
+  g1=new Chart(document.getElementById('grafMes'),{
+    type:'bar',
+    data:{labels:Object.keys(porMes),datasets:[{data:Object.values(porMes)}]},
+    options:{responsive:true,maintainAspectRatio:false}
+  });
+
+  g2=new Chart(document.getElementById('grafCategoria'),{
+    type:'pie',
+    data:{labels:Object.keys(porCat),datasets:[{data:Object.values(porCat)}]},
+    options:{responsive:true,maintainAspectRatio:false}
+  });
+
+  g3=new Chart(document.getElementById('grafCentro'),{
+    type:'doughnut',
+    data:{labels:Object.keys(porCentro),datasets:[{data:Object.values(porCentro)}]},
+    options:{responsive:true,maintainAspectRatio:false}
+  });
+},{});
   const porCat = dados.reduce((a,d)=>{a[d.categoria]=(a[d.categoria]||0)+d.valor;return a;},{});
   const porCentro = dados.reduce((a,d)=>{a[d.centro]=(a[d.centro]||0)+d.valor;return a;},{});
 
