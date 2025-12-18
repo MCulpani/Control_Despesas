@@ -58,7 +58,9 @@ canvas{max-height:240px;background:#020617;border-radius:12px;padding:6px}
   <div><label>Fato gerador</label><input id="fatoGerador"></div>
   <div><label>Observações</label><input id="observacoes"></div>
   <div><label>Status</label><select id="status"><option>Pendente</option><option>Aprovado</option></select></div>
-  <div><label>Nota fiscal (PDF)</label><input type="file" id="nota" accept="application/pdf"></div>
+  <div><label>Nota fiscal (PDF)</label><input type="file" id="nota" accept="application/pdf,image/*"></div>
+  <div><label>Comprovante Pagamento</label><input type="file" id="comprovantePagamento" accept="application/pdf,image/*"></div>
+  <div><label>Comprovante Negociação</label><input type="file" id="comprovanteNegociacao" accept="application/pdf,image/*"></div>
 </div>
 <button class="action" onclick="salvarDespesa()">Salvar</button>
 </section>
@@ -70,9 +72,7 @@ canvas{max-height:240px;background:#020617;border-radius:12px;padding:6px}
 <table>
 <thead>
 <tr>
-<th>Razão Social</th><th>NF Cliente</th><th>UF</th><th>Valor NF</th><th>Valor DT</th>
-<th>Veículo</th><th>DT</th><th>Vencimento</th><th>Cliente</th><th>Serviço</th>
-<th>Embut.</th><th>Motivo</th><th>Fato Gerador</th><th>Observações</th><th>Status</th><th>PDF</th>
+<th>Razão Social</th><th>NF Cliente</th><th>UF</th><th>Valor NF</th><th>Valor DT</th><th>Veículo</th><th>DT</th><th>Vencimento</th><th>Cliente</th><th>Serviço</th><th>Embut.</th><th>Motivo</th><th>Fato Gerador</th><th>Observações</th><th>Status</th><th>Nota Fiscal</th><th>Comp. Pagto</th><th>Comp. Negociação</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
@@ -96,11 +96,15 @@ function showSection(id){
 }
 
 function salvarDespesa(){
-  const file=document.getElementById('nota').files[0];
-  if(!file) return alert('Anexe o PDF');
+  const fileNota=document.getElementById('nota').files[0];
+  const filePag=document.getElementById('comprovantePagamento').files[0];
+  const fileNeg=document.getElementById('comprovanteNegociacao').files[0];
 
-  const r=new FileReader();
-  r.onload=()=>{
+  if(!fileNota) return alert('Anexe a Nota Fiscal');
+
+  const readFile = file => new Promise(res=>{ if(!file) return res(null); const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); });
+
+  Promise.all([readFile(fileNota), readFile(filePag), readFile(fileNeg)]).then(([nota,pag,neg])=>{
     despesas.push({
       razao:razao.value,
       nfCliente:nfCliente.value,
@@ -117,12 +121,13 @@ function salvarDespesa(){
       fatoGerador:fatoGerador.value,
       observacoes:observacoes.value,
       status:status.value,
-      nota:r.result
+      nota:nota,
+      comprovantePagamento:pag,
+      comprovanteNegociacao:neg
     });
     localStorage.setItem('despesas',JSON.stringify(despesas));
     alert('Despesa salva com sucesso');
-  };
-  r.readAsDataURL(file);
+  });
 }
 
 function renderTabela(){
@@ -130,6 +135,17 @@ function renderTabela(){
   despesas.forEach(d=>{
     tbody.innerHTML+=`<tr>
       <td>${d.razao}</td><td>${d.nfCliente}</td><td>${d.uf}</td>
+      <td>${d.valorNFS}</td><td>${d.valorDT}</td><td>${d.tipoVeiculo}</td>
+      <td>${d.numeroDT}</td><td>${d.dataVencimento}</td><td>${d.cliente}</td>
+      <td>${d.tipoServico}</td><td>${d.embutimento}</td><td>${d.motivo}</td>
+      <td>${d.fatoGerador}</td><td>${d.observacoes}</td>
+      <td><span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span></td>
+      <td>${d.nota?`<a href="${d.nota}" target="_blank">Abrir</a>`:'-'}</td>
+      <td>${d.comprovantePagamento?`<a href="${d.comprovantePagamento}" target="_blank">Abrir</a>`:'-'}</td>
+      <td>${d.comprovanteNegociacao?`<a href="${d.comprovanteNegociacao}" target="_blank">Abrir</a>`:'-'}</td>
+    </tr>`;
+  });
+}</td><td>${d.nfCliente}</td><td>${d.uf}</td>
       <td>${d.valorNFS}</td><td>${d.valorDT}</td><td>${d.tipoVeiculo}</td>
       <td>${d.numeroDT}</td><td>${d.dataVencimento}</td><td>${d.cliente}</td>
       <td>${d.tipoServico}</td><td>${d.embutimento}</td><td>${d.motivo}</td>
