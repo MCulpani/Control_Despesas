@@ -43,10 +43,20 @@ canvas{max-height:240px;background:#020617;border-radius:12px;padding:6px}
 <section id="cadastro" class="card">
 <h3>Cadastro de Despesa</h3>
 <div class="grid">
-  <div><label>Data</label><input type="date" id="data"></div>
-  <div><label>Categoria</label><select id="categoria"><option>Transporte</option><option>Alimentação</option><option>Hospedagem</option><option>Serviços</option><option>Outros</option></select></div>
-  <div><label>Centro de custo</label><input id="centro"></div>
-  <div><label>Valor</label><input type="number" id="valor" step="0.01"></div>
+  <div><label>Razão Social Prestador</label><input id="Razão Social Prestador"></div>
+  <div><label>NF Cliente</label><input id="NF Cliente"></div>
+  <div><label>UF</label><input id="UF"></div>
+  <div><label>Valor da NF-s</label><input type="number" id="valor da NFS-s" step="0.01"></div>
+  <div><label>Valor por DT</label><input type="number" id="valor por DT" step="0.01"></div>
+  <div><label>Tipo de veículo</label><select id="categoria"><option>Truck</option><option>Carreta</option><option>Bitrem</option><option>N/A</option></select></div>
+  <div><label>Número DT</label><input id="DT"></div>
+  <div><label>Data Vencimento</label><input type="date" id="data"></div>
+  <div><label>Cliente</label><input id="Nome do cliente"></div>
+  <div><label>Tipo de Serviço</label><select id="Tipo de serviço"><option>Taxa de Desembarque</option><option>Taxa de Embarque</option><option>Armazenagem</option><option>Travessia de Balsa</option><option>Descarga Manual</option><option>Redespacho</option><option>Descarga Maquinário</option></select></div>
+  <div><label>Embutimento?</label><select id="Embutimento?"><option>Sim</option><option>Não</option></select></div>
+  <div><label>Motivo?</label><select id="Motivo?"><option>Sim</option><option>Não</option></select></div>
+  <div><label>Fato gerador</label><input id="Fato gerador"></div>
+  <div><label>Observações</label><input id="Observações"></div>
   <div><label>Status</label><select id="status"><option>Pendente</option><option>Aprovado</option></select></div>
   <div><label>Nota fiscal (PDF)</label><input type="file" id="nota" accept="application/pdf"></div>
 </div>
