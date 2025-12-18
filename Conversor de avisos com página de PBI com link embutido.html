@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Conversor de Aviso de Pagamento</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Inter', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+  #login-area { max-width: 400px; margin: 6vh auto; padding: 50px 30px; background: #ffffff; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.12); text-align: center; }
+  #login-area h2 { margin-bottom: 32px; font-weight: 600; color: #0f172a; font-size: 26px; }
+  .input-wrapper { position: relative; margin-bottom: 20px; }
+  .input-wrapper input { width: 100%; padding: 14px 45px 14px 16px; font-size: 15px; border: 1px solid #cbd5e1; border-radius: 12px; background: #f8fafc; color: #0f172a; box-sizing: border-box; transition: border 0.3s, box-shadow 0.3s; }
+  .input-wrapper i { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); cursor: pointer; }
+  button.app-btn { padding: 10px 16px; border: 0; border-radius: 8px; background: #0ea5a4; color: white; cursor: pointer; font-weight: 600; }
+  .card { background:#fff; max-width:1000px; margin:40px auto; padding:24px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+  #preview table { width:100%; border-collapse:collapse; margin-top:18px; }
+  #preview th,#preview td { border-bottom:1px solid #e2e8f0; padding:6px 8px; font-size:13px; }
+  #progressContainer{ width:100%; background:#e2e8f0; height:12px; border-radius:6px; margin-top:18px; display:none; }
+  #progressBar{ height:100%; width:0%; background:#0ea5a4; border-radius:6px; transition:width .25s; }
+  #dashboardBox{ margin-top:18px; padding:16px; background:#fff3cd; border:2px solid #ffca2c; border-radius:8px; font-size:20px; font-weight:bold; color:#8a6d3b; }
+  #history-area th, #historyTable td { text-align: center !important; }
+  .chart-wrapper { max-width: 900px; margin-top: 20px; height: 320px; }
+  .history-controls { display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-top:12px; }
+  #history-area table thead th { text-align:center; }
+  @media (max-width: 640px) { .card { margin:20px; padding:16px; } .chart-wrapper { height:240px; } }
+  .dash-card { padding:15px; background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08); min-width:200px; flex:1; }
+  .dash-row { display:flex; flex-wrap:wrap; gap:20px; margin-top:10px; }
+  .filters-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+/* === PALETA GELADA - OVERRIDE LEVE === */
+body { background:#f1f5f9 !important; color:#1e293b !important; }
+.app-btn { background:#38bdf8 !important; color:#fff !important; }
+#processBtn { background:#0ea5e9 !important; }
+#historyBtn { background:#38bdf8 !important; }
+#btnLogout { background:#ef4444 !important; }
+table th { background:#e0f2fe !important; color:#0f172a !important; }
+table td { border-bottom:1px solid #e2e8f0 !important; }
+/* === AJUSTE GELADO → CINZA + SOMBRAS SUAVES === */
+body { background:#f3f4f6 !important; color:#1f2937 !important; }
+/* Botões com cinza-azulado suave */
+.app-btn { background:#94a3b8 !important; color:#fff !important; }
+#processBtn { background:#64748b !important; }
+#historyBtn { background:#94a3b8 !important; }
+/* Tabela */
+table th { background:#e5e7eb !important; color:#1f2937 !important; }
+table td { border-bottom:1px solid #d1d5db !important; }
+/* Cartões do dashboard com sombra leve ampliada */
+#advancedDashboard div[style*="min-width"],
+.chart-wrapper,
+.card {
+      background:#ffffff !important;
+      border:1px solid #e5e7eb !important;
+      box-shadow:0 6px 18px rgba(0,0,0,0.08) !important;
+  }
+
+  /* --- Garantir que TODAS as linhas da tabela apareçam no preview --- */
+  #preview {
+    max-height: none !important;
+    overflow-y: visible !important;
+    overflow-x: auto !important;
+    display: block !important;
+  }
+
+  #preview table {
+    display: table !important;
+    white-space: nowrap !important;
+  }
+
+  #app-area .card {
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+  }
+
+  #preview, #app-area, #app-area .card {
+    height: auto !important;
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div id="login-area" style="display:block;">
+  <h2>Entrar na Plataforma</h2>
+  <div class="input-wrapper">
+    <input id="email" type="email" placeholder="Email" />
+    <i>👤</i>
+  </div>
+  <div class="input-wrapper">
+    <input id="password" type="password" placeholder="Senha" />
+    <i id="togglePassword">👁️</i>
+  </div>
+  <button id="btnLogin" class="app-btn" style="width:100%;">Entrar</button>
+  <p id="login-msg"></p>
+</div>
+<div id="app-area" style="display:none;">
+  <div class="card">
+    <h1>Conversor de Aviso de Pagamento</h1>
+    <input id="files" type="file" accept="application/pdf" multiple />
+    <div style="display:flex; align-items:center; gap:10px; margin-top:16px;">
+      <button id="processBtn" class="app-btn">Compilar e Transformar</button>
+<button id="downloadBtn" class="app-btn" disabled>Baixar Excel</button>
+
+<!-- CAMPO DE BUSCA CENTRALIZADO -->
+<div style="flex:1; display:flex; justify-content:center;">
+  <input 
+    id="searchInput"
+    type="text"
+    placeholder="Pesquisar na tabela..."
+    style="padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; width:60%; max-width:260px;"
+  >
+</div>
+
+<div style="margin-left:auto;">
+    <button id="historyBtn" class="app-btn" style="background:#6366f1;">Histórico</button>
+    <button id="btnPowerBI" class="app-btn" style="background:#0ea5a4;">Power BI</button>
+    <button id="btnLogout" class="app-btn" style="background:#ff5252;">Sair</button>
+</div>
+    </div>
+    <div id="dashboardBox">Total em Avisos: R$ 0,00</div>
+    <div id="progressContainer"><div id="progressBar"></div></div>
+    <div id="preview"></div>
+  </div>
+</div>
+<div id="history-area" style="display:none;">
+  <div class="card">
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:10px;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <h1>Histórico de Processamentos</h1>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button id="clearHistoryBtn" class="app-btn" style="background:#ef4444;">Limpar Histórico</button>
+          <button id="backBtn" class="app-btn">Voltar ao Conversor</button>
+        </div>
+      </div>
+      <div class="filters-row" style="margin-top:4px;">
+        <label>Data inicial:
+          <input type="date" id="filtroInicio" style="padding:6px; margin-left:6px;">
+        </label>
+        <label>Data final:
+          <input type="date" id="filtroFim" style="padding:6px; margin-left:6px;">
+        </label>
+        <button id="btnAplicarFiltro" class="app-btn" style="background:#0ea5a4;">Aplicar Filtro</button>
+        <button id="btnLimparFiltro" class="app-btn" style="background:#6b7280;">Limpar Filtro</button>
+      </div>
+    </div>
+    <div class="chart-wrapper" style="overflow-x:auto; padding:20px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);">
+      <canvas id="historyChart" style="border-radius: 12px; box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);"></canvas>
+    </div>
+<div id="advancedDashboard" style="margin-top:30px;">
+  <h2 style="margin-bottom:10px;">Dashboard Avançado</h2>
+  <div style="display:flex; flex-wrap:nowrap; gap:20px; align-items:stretch;">
+    <div style="flex:1 1 0; min-width:150px; padding:15px; background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      <h3>Total Acumulado</h3>
+      <p id="dashTotalAcumulado" style="font-size:20px; font-weight:bold;"></p>
+    </div>
+    <div style="flex:1 1 0; min-width:150px; padding:15px; background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      <h3>Média por Dia</h3>
+      <p id="dashMedia" style="font-size:20px; font-weight:bold;"></p>
+    </div>
+    <div style="flex:1 1 0; min-width:150px; padding:15px; background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      <h3>Maior Total</h3>
+      <p id="dashMaior" style="font-size:18px;"></p>
+    </div>
+    <div style="flex:1 1 0; min-width:150px; padding:15px; background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      <h3>Menor Total</h3>
+      <p id="dashMenor" style="font-size:18px;"></p>
+    </div>
+    <div style="flex:1 1 0; min-width:150px; padding:15px; background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      <h3>Variação Último vs Penúltimo</h3>
+      <p id="dashVariacao" style="font-size:18px;"></p>
+    </div>
+  </div>
+  
+</div>
+
+    
+    <h2 style="margin-bottom:10px; display: inline-block; margin-right: 10px;">Tabela Histórico</h2>
+    <button id="exportHistoryBtn" class="app-btn" style="background:#2563eb; display: inline-block;">Exportar Histórico (Excel)</button>
+    
+    
+    
+<table style="width:100%; border-collapse:collapse; margin-top:20px;">
+      <thead>
+        <tr>
+          <th style="padding:8px; border-bottom:1px solid #ddd; text-align:center;">Data</th>
+          <th style="padding:8px; border-bottom:1px solid #ddd; text-align:center;">Total em Avisos</th>
+        </tr>
+      </thead>
+      <tbody id="historyTable"></tbody>
+    </table>
+  </div>
+</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+const firebaseConfig = { apiKey: "AIzaSyC_FD33WikHRUVCd2JtH_ok3WF1YtfAFhU", authDomain: "conversor-de-avisos.firebaseapp.com", projectId: "conversor-de-avisos", storageBucket: "conversor-de-avisos.firebasestorage.app", messagingSenderId: "1099286231450", appId: "1:1099286231450:web:94e0b02dec2ef6b0d26223" };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const loginBox = document.getElementById("login-area");
+const appBox = document.getElementById("app-area");
+const msgLogin = document.getElementById("login-msg");
+const emailInput = document.getElementById("email");
+const passInput  = document.getElementById("password");
+const btnLogin   = document.getElementById("btnLogin");
+const btnLogout  = document.getElementById("btnLogout");
+btnLogin.addEventListener("click", async () => {
+  try { await signInWithEmailAndPassword(auth, emailInput.value.trim(), passInput.value); msgLogin.textContent = ""; } catch (err) { msgLogin.textContent = "Erro: " + err.message; }
+});
+btnLogout.addEventListener("click", async () => { await signOut(auth); });
+document.getElementById("togglePassword").addEventListener("click", () => { passInput.type = passInput.type === "password" ? "text" : "password"; });
+onAuthStateChanged(auth, (user) => { loginBox.style.display = user ? "none" : "block"; appBox.style.display = user ? "block" : "none"; });
+</script>
+<script>
+function extractPDFDate(txt) {
+  if (!txt) return null;
+  // Regex para capturar a data após "Data" no texto
+  const regex = /Data[\s:\-]*?(\d{2}[\/\.\-]\d{2}[\/\.\-]\d{4})/i;
+  const m = txt.match(regex);
+  if (!m) return null;
+  
+  // Processamento da data extraída para garantir o formato correto
+  const raw = m[1].replace(/\./g, '/');  // Substitui pontos por barras
+  const parts = raw.split('/');
+  if (parts.length !== 3) return null;
+  const yyyy = parts[2];
+  const mm = parts[1].padStart(2, '0');
+  const dd = parts[0].padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+const filesInput = document.getElementById("files");
+const processBtn = document.getElementById("processBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+const previewEl = document.getElementById("preview");
+const progressContainer = document.getElementById("progressContainer");
+const progressBar = document.getElementById("progressBar");
+const dashboardBox = document.getElementById("dashboardBox");
+const historyBtn = document.getElementById("historyBtn");
+const historyArea = document.getElementById("history-area");
+const historyTable = document.getElementById("historyTable");
+const backBtn = document.getElementById("backBtn");
+const exportHistoryBtn = document.getElementById("exportHistoryBtn");
+const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+const filtroInicio = document.getElementById("filtroInicio");
+const filtroFim = document.getElementById("filtroFim");
+const btnAplicarFiltro = document.getElementById("btnAplicarFiltro");
+const btnLimparFiltro = document.getElementById("btnLimparFiltro");
+const appBoxGlobal = document.getElementById("app-area");
+const loginBoxGlobal = document.getElementById("login-area");
+let compiled = [];
+let workbookBinary = null;
+let chartInstance = null;
+async function extractText(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  let text = "";
+  for(let i = 1; i <= pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(x => x.str).join(" ") + "\n";
+  }
+  return text;
+}
+function extractPDFDate(txt){
+  if(!txt) return null;
+  const m = txt.match(/Data[\s:\-]*?(\d{2}[\/\.]\d{2}[\/\.]\d{4})/i);
+  if(!m) return null;
+  const raw = m[1].replace(/\./g, '/');
+  const parts = raw.split('/');
+  if(parts.length !== 3) return null;
+  const yyyy = parts[2];
+  const mm = parts[1].padStart(2,'0');
+  const dd = parts[0].padStart(2,'0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+function formatDateDisplay(isoDate){
+  if(!isoDate) return "";
+  const p = isoDate.split('-');
+  if(p.length !== 3) return isoDate;
+  return `${p[2]}/${p[1]}/${p[0]}`;
+}
+const LOCATIONS = ["JOINVILLE - SC","CASTRO - PR","CONTAGEM - MG","ESCADA - PE","RIO CLARO - SP","SIMOES FILHO - BA"];
+function detectLocation(txt){
+  let clean = txt.replace(/\s+/g, ' ').toUpperCase();
+  for(const loc of LOCATIONS){ if(clean.includes(loc)) return loc; }
+  return "NÃO IDENTIFICADO";
+}
+const rowRegex = /(\d{10,})\s+(\d+-(?:\d+|U))\s+(\d{2}\.\d{2}\.\d{4})\s+([\d.,]+)\s+([\d.,]+)/g;
+function parseCurrency(v){ if(!v) return 0; return parseFloat(v.replace(/\./g,"").replace(",",".")); }
+function parseDateBR(d){ const m = d.match(/(\d{2})\.(\d{2})\.(\d{4})/); return m ? `${m[1]}/${m[2]}/${m[3]}` : ""; }
+function getCodigoFilial(local){ switch(local){ case "JOINVILLE - SC": return "500001102"; case "CASTRO - PR": return "500001855"; case "CONTAGEM - MG": return "500001459"; case "ESCADA - PE": return "500001122"; case "RIO CLARO - SP": return "500001131"; case "SIMOES FILHO - BA": return "500001405"; default: return ""; } }
+function extractRows(txt, local, documento, pdfDate){
+  let rows = [], m;
+  while((m = rowRegex.exec(txt)) !== null){
+    rows.push({
+  "Código filial": getCodigoFilial(local),
+  
+  // ➜ LOCAL sem “ - ”, agora vira “/”
+  "Local": local.replace(" - ", "/"),
+
+  "Documento": documento,
+  "Data Compensação": pdfDate,
+  "Nº doc SAP": m[1],
+
+  // ➜ DOC REFERÊNCIA removendo sufixos -0, -00, -000...
+  // Remover sufixos -0, -00, -000 e também todos os zeros à esquerda
+"Doc Referência": m[2]
+  .replace(/-0+$/g, "")   // remove -0, -00, -000 do final
+  .replace(/^0+/g, ""),   // remove zeros do começo
+
+  "Data": parseDateBR(m[3]),
+  "Desconto": parseCurrency(m[4]),
+  "Montante bruto": parseCurrency(m[5])
+});
+  }
+  return rows;
+}
+function saveToHistoryFromPDF(rows){
+  if(!rows || !rows.length) return;
+  const historyDate = rows.find(r => r["Data Compensação"])?.["Data Compensação"] || null;
+  const dateToSave = historyDate || new Date().toISOString().slice(0,10);
+  const total = rows.reduce((sum, r) => sum + (r["Montante bruto"] || 0), 0);
+  let history = JSON.parse(localStorage.getItem("history")) || [];
+  history = history.filter(h => h.date !== dateToSave);
+  history.push({ date: dateToSave, total: total });
+  localStorage.setItem("history", JSON.stringify(history));
+  if(historyArea.style.display === "block") loadHistory();
+}
+function loadHistory(){
+  let history = JSON.parse(localStorage.getItem("history")) || [];
+  const inicio = filtroInicio.value;
+  const fim = filtroFim.value;
+  if(inicio) history = history.filter(h => h.date >= inicio);
+  if(fim) history = history.filter(h => h.date <= fim);
+  history.sort((a,b) => b.date.localeCompare(a.date));
+  historyTable.innerHTML = "";
+  history.forEach(item=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="padding:8px; border-bottom:1px solid #ddd; text-align:center;">${formatDateDisplay(item.date)}</td>
+      <td style="padding:8px; border-bottom:1px solid #ddd; text-align:center;">
+        ${Number(item.total).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+      </td>`;
+    historyTable.appendChild(tr);
+  });
+  const labels = history.map(h => formatDateDisplay(h.date));
+  const data = history.map(h => Number(h.total));
+  const ctx = document.getElementById('historyChart').getContext('2d');
+  if(chartInstance){
+    chartInstance.data.labels = labels;
+    chartInstance.data.datasets[0].data = data;
+    chartInstance.update();
+  } else {
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Total em Avisos',
+          data: data,
+          fill: false,
+          tension: 0.2,
+          pointRadius: 4,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            ticks: {
+              callback: function(value) {
+                return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+              }
+            }
+          }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const v = context.parsed.y || 0;
+                return v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+  const totals = history.map(h => h.total);
+  const dates = history.map(h => h.date);
+  const totalAcumulado = totals.reduce((a,b)=>a+b,0);
+  const media = totals.length ? totalAcumulado / totals.length : 0;
+  const maior = totals.length ? Math.max(...totals) : 0;
+  const menor = totals.length ? Math.min(...totals) : 0;
+  const idxMaior = totals.indexOf(maior);
+  const idxMenor = totals.indexOf(menor);
+  const maiorData = idxMaior >=0 ? formatDateDisplay(dates[idxMaior]) : "";
+  const menorData = idxMenor >=0 ? formatDateDisplay(dates[idxMenor]) : "";
+  document.getElementById("dashTotalAcumulado").textContent = totalAcumulado.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  document.getElementById("dashMedia").textContent = media.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  document.getElementById("dashMaior").textContent = maior.toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) + (maiorData ? " (" + maiorData + ")" : "");
+  document.getElementById("dashMenor").textContent = menor.toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) + (menorData ? " (" + menorData + ")" : "");
+  let variacaoText = "—";
+  if(history.length >= 2){
+    const ultimo = history[0].total;
+    const penultimo = history[1].total;
+    if(penultimo !== 0){
+      const variacao = ((ultimo - penultimo) / penultimo) * 100;
+      variacaoText = (variacao >= 0 ? "+" : "") + variacao.toFixed(2) + "%";
+    } else {
+      variacaoText = "—";
+    }
+  }
+  document.getElementById("dashVariacao").textContent = variacaoText;
+  const ctxBar = document.getElementById("historyBarChart").getContext("2d");
+  if(window.barChartInstance){
+    window.barChartInstance.data.labels = dates.map(formatDateDisplay);
+    window.barChartInstance.data.datasets[0].data = totals;
+    window.barChartInstance.update();
+  } else {
+    window.barChartInstance = new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: dates.map(formatDateDisplay),
+        datasets: [{
+          label: 'Total por Data',
+          data: totals,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context){
+                const v = context.raw || 0;
+                return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+              }
+            }
+          }
+        },
+        scales: {
+          y: { ticks: { callback: function(value){ return value.toLocaleString("pt-BR",{style:"currency",currency:"BRL"}); } } }
+        }
+      }
+    });
+  }
+}
+exportHistoryBtn.addEventListener('click', () => {
+  const history = JSON.parse(localStorage.getItem("history")) || [];
+  if(!history.length){ alert("Nenhum registro no histórico para exportar."); return; }
+  const ws_data = [["Data", "Total em Avisos"]];
+  history.forEach(h => { ws_data.push([formatDateDisplay(h.date), Number(h.total)]); });
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Histórico");
+  XLSX.writeFile(wb, "historico_" + new Date().toISOString().slice(0,10) + ".xlsx");
+});
+  clearHistoryBtn.addEventListener('click', () => {
+  if(!confirm("Deseja realmente limpar todo o histórico?")) return;
+  localStorage.removeItem("history");
+  loadHistory();
+});
+btnAplicarFiltro.addEventListener('click', () => {
+  loadHistory();
+});
+btnLimparFiltro.addEventListener('click', () => {
+  filtroInicio.value = "";
+  filtroFim.value = "";
+  loadHistory();
+});
+historyBtn.addEventListener("click", ()=>{
+  appBoxGlobal.style.display = "none";
+  historyArea.style.display = "block";
+  loadHistory();
+});
+backBtn.addEventListener("click", ()=>{
+  historyArea.style.display = "none";
+  appBoxGlobal.style.display = "block";
+});
+async function processFiles(files){
+  compiled = [];
+  progressContainer.style.display = "block";
+  progressBar.style.width = "0%";
+  let processed = 0;
+  for(const f of files){
+    const txt = await extractText(f);
+    const local = detectLocation(txt);
+    const docMatch = txt.match(/Documento\s+(\d{6,})/);
+    const documento = docMatch ? docMatch[1] : "";
+    const pdfDate = extractPDFDate(txt);
+    const rows = extractRows(txt, local, documento, pdfDate);
+    rows.forEach(r => r["Nome da Origem"] = f.name);
+    compiled.push(...rows);
+    processed++;
+    progressBar.style.width = (processed/files.length*100)+"%";
+  }
+  return compiled;
+}
+function updateDashboardAndHistory(rows){
+  const total = rows.reduce((sum, r)=> sum + (r["Montante bruto"] || 0), 0);
+  dashboardBox.textContent =
+    "Total em Avisos: " +
+    total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  saveToHistoryFromPDF(rows);
+}
+function renderPreview(rows){
+  if(!rows.length){ previewEl.innerHTML="<p>Nenhum dado encontrado.</p>"; return; }
+  const cols = Object.keys(rows[0]);
+  let html = "<table><thead><tr>" + cols.map(c=>`<th>${c}</th>`).join("") + "</tr></thead><tbody>";
+  rows.forEach(r=>{ html += "<tr>" + cols.map(c => {
+  let value = r[c];
+
+  if (c === "Data Compensação" && value) {
+    value = formatDateDisplay(value);
+  }
+
+  if (c === "Montante bruto" && value !== undefined && value !== null) {
+    value = Number(value).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
+  }
+
+  return `<td>${value ?? ""}</td>`;
+}).join("") + "</tr>";
+
+ });
+  html+="</tbody></table>";
+  previewEl.innerHTML = html;
+}
+function buildExcel(rows){
+  const formattedRows = rows.map(r => {
+    const copy = { ...r };
+
+    // Formatar Data Compensação no formato brasileiro
+    if (copy["Data Compensação"]) {
+      copy["Data Compensação"] = formatDateDisplay(copy["Data Compensação"]);
+    }
+
+    // Exportar Montante bruto como número REAL (sem R$)
+    if (copy["Montante bruto"] !== undefined && copy["Montante bruto"] !== null) {
+      copy["Montante bruto"] = Number(copy["Montante bruto"]);
+    }
+
+    return copy;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(formattedRows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Dados");
+  return wb;
+}
+
+processBtn.addEventListener("click", async ()=>{
+  const files = [...filesInput.files];
+  if(!files.length){ alert("Selecione PDFs."); return; }
+  processBtn.disabled = true;
+  downloadBtn.disabled = true;
+  await processFiles(files);
+  renderPreview(compiled);
+  updateDashboardAndHistory(compiled);
+  if(compiled.length){ workbookBinary = buildExcel(compiled); downloadBtn.disabled=false; }
+  processBtn.disabled = false;
+});
+downloadBtn.addEventListener("click", ()=>{ if(!workbookBinary) return; XLSX.writeFile(workbookBinary, "compilado_"+new Date().toISOString().slice(0,10)+".xlsx"); });
+
+  // === FILTRO DE PESQUISA NA TABELA DO PREVIEW ===
+const searchInput = document.getElementById("searchInput");
+
+if (searchInput) {
+  searchInput.addEventListener("input", () => {
+    const termo = searchInput.value.toLowerCase();
+    const linhas = previewEl.querySelectorAll("tbody tr");
+
+    linhas.forEach(tr => {
+      const texto = tr.innerText.toLowerCase();
+      tr.style.display = texto.includes(termo) ? "" : "none";
+    });
+  });
+}
+</script>
+
+<!-- ÁREA DO POWER BI (interno) -->
+<div id="powerbi-area" style="display:none;">
+  <div class="card">
+    <h1>Dashboard Power BI</h1>
+
+    <button id="backFromPowerBI" class="app-btn" style="background:#64748b; margin-bottom:15px;">
+      Voltar ao Conversor
+    </button>
+
+    <iframe 
+      id="powerbiFrame"
+      src="https://app.powerbi.com/view?r=eyJrIjoiOTk5NzQyNzctZTdlZS00YzYxLWJlOGEtM2NkYjg1NzBmNjY0IiwidCI6ImQ4NjM0ZmQ3LTkzZTQtNDBjMC05ZTM1LWYwNzQ0ZmIyZjc2NyJ9"
+      style="border:0; width:100%; height:80vh; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+    </iframe>
+  </div>
+</div>
+
+
+<script>
+// --- Power BI integrado ---
+document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("btnPowerBI");
+    const back = document.getElementById("backFromPowerBI");
+
+    if(btn){
+        btn.onclick = function(){
+            document.getElementById("app-area").style.display = "none";
+            document.getElementById("history-area").style.display = "none";
+            document.getElementById("powerbi-area").style.display = "block";
+        };
+    }
+
+    if(back){
+        back.onclick = function(){
+            document.getElementById("powerbi-area").style.display = "none";
+            document.getElementById("app-area").style.display = "block";
+        };
+    }
+});
+</script>
+
+</body>
+</html>
