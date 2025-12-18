@@ -1,144 +1,104 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Gestão de Despesas Operacionais</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestão de Despesas Operacionais</title>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
-  <!-- SheetJS (Excel) -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- jsPDF -->
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-
-  <style>
-    :root {
-      --bg:#0f172a;--card:#111827;--primary:#38bdf8;--secondary:#22c55e;
-      --text:#e5e7eb;--muted:#9ca3af;
-    }
-    *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-    body{margin:0;background:var(--bg);color:var(--text)}
-    header{padding:16px 24px;background:#020617;display:flex;justify-content:space-between;align-items:center}
-    nav button{margin-left:6px;padding:8px 14px;border:none;border-radius:8px;background:var(--primary);font-weight:bold;cursor:pointer}
-    main{padding:24px}
-    .card{background:var(--card);border-radius:14px;padding:20px;margin-bottom:20px}
-    h2{margin-top:0}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-    label{font-size:12px;color:var(--muted)}
-    input,select{width:100%;padding:10px;border-radius:8px;border:1px solid #374151;background:#020617;color:var(--text)}
-    button.action{margin-top:10px;padding:12px;border:none;border-radius:10px;background:var(--secondary);font-weight:bold;cursor:pointer}
-    table{width:100%;border-collapse:collapse;font-size:13px}
-    th,td{padding:8px;border-bottom:1px solid #1f2933}
-    .badge{padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold}
-    .ok{background:#14532d;color:#22c55e}
-    .pending{background:#422006;color:#facc15}
-    canvas{background:#020617;border-radius:12px;padding:6px;max-height:260px}
-  </style>
+<style>
+body{margin:0;font-family:Arial;background:#0f172a;color:#e5e7eb}
+header{background:#020617;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+header button{margin-left:6px;padding:8px 14px;border:none;border-radius:8px;background:#38bdf8;font-weight:bold;cursor:pointer}
+main{padding:20px}
+.card{background:#111827;border-radius:14px;padding:18px;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+label{font-size:12px;color:#9ca3af}
+input,select{width:100%;padding:8px;border-radius:8px;border:1px solid #374151;background:#020617;color:#e5e7eb}
+button.action{margin-top:10px;padding:10px;border:none;border-radius:10px;background:#22c55e;font-weight:bold;cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px;border-bottom:1px solid #1f2933}
+.badge{padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold}
+.ok{background:#14532d;color:#22c55e}
+.pending{background:#422006;color:#facc15}
+canvas{max-height:240px;background:#020617;border-radius:12px;padding:6px}
+</style>
 </head>
 <body>
 
 <header>
-  <h2>📊 Gestão de Despesas Operacionais</h2>
-  <nav>
-    <button onclick="show('cadastro')">Nova</button>
-    <button onclick="show('lista')">Despesas</button>
-    <button onclick="show('relatorios')">Relatórios</button>
-  </nav>
+  <h3>📊 Gestão de Despesas</h3>
+  <div>
+    <button onclick="showSection('cadastro')">Nova</button>
+    <button onclick="showSection('lista')">Despesas</button>
+    <button onclick="showSection('relatorios')">Relatórios</button>
+  </div>
 </header>
 
 <main>
 
 <section id="cadastro" class="card">
-  <h2>Cadastro de Despesa</h2>
-  <div class="grid">
-    <div><label>Data</label><input type="date" id="data"></div>
-    <div><label>Categoria</label>
-      <select id="categoria">
-        <option>Transporte</option><option>Alimentação</option>
-        <option>Hospedagem</option><option>Serviços</option><option>Outros</option>
-      </select>
-    </div>
-    <div><label>Centro de Custo</label><input id="centro"></div>
-    <div><label>Valor</label><input type="number" id="valor" step="0.01"></div>
-    <div><label>Status</label><select id="status"><option>Pendente</option><option>Aprovado</option></select></div>
-    <div><label>Nota Fiscal (PDF)</label><input type="file" id="nota" accept="application/pdf"></div>
-  </div>
-  <button class="action" onclick="salvar()">Salvar</button>
+<h3>Cadastro de Despesa</h3>
+<div class="grid">
+  <div><label>Data</label><input type="date" id="data"></div>
+  <div><label>Categoria</label><select id="categoria"><option>Transporte</option><option>Alimentação</option><option>Hospedagem</option><option>Serviços</option><option>Outros</option></select></div>
+  <div><label>Centro de custo</label><input id="centro"></div>
+  <div><label>Valor</label><input type="number" id="valor" step="0.01"></div>
+  <div><label>Status</label><select id="status"><option>Pendente</option><option>Aprovado</option></select></div>
+  <div><label>Nota fiscal (PDF)</label><input type="file" id="nota" accept="application/pdf"></div>
+</div>
+<button class="action" onclick="salvarDespesa()">Salvar</button>
 </section>
 
 <section id="lista" class="card" style="display:none">
-  <h2>Despesas Cadastradas</h2>
-  <button onclick="exportarExcel()">📥 Excel</button>
-  <button onclick="exportarPDF()">📄 PDF</button>
-  <table>
-    <thead><tr><th>Data</th><th>Categoria</th><th>Centro</th><th>Valor</th><th>Status</th><th>Nota</th></tr></thead>
-    <tbody id="tbody"></tbody>
-  </table>
+<h3>Despesas</h3>
+<button onclick="exportarExcel()">📥 Excel</button>
+<button onclick="exportarPDF()">📄 PDF</button>
+<table>
+<thead><tr><th>Data</th><th>Categoria</th><th>Centro</th><th>Valor</th><th>Status</th><th>PDF</th></tr></thead>
+<tbody id="tbody"></tbody>
+</table>
 </section>
 
 <section id="relatorios" class="card" style="display:none">
-  <h2>Relatórios e Análises</h2>
-
-  <div class="grid">
-    <div>
-      <label>Período (Mês)</label>
-      <input type="month" id="filtroMes">
-    </div>
-    <div>
-      <label>Categoria</label>
-      <select id="filtroCategoria"><option value="">Todas</option></select>
-    </div>
-    <div>
-      <label>Centro de Custo</label>
-      <select id="filtroCentro"><option value="">Todos</option></select>
-    </div>
-  </div>
-
-  <button class="action" onclick="graficos()">Aplicar Filtros</button>
-
-  <div class="grid" style="margin-top:20px">
-    <canvas id="grafMes"></canvas>
-    <canvas id="grafCategoria"></canvas>
-    <canvas id="grafCentro"></canvas>
-  </div>
+<h3>Relatórios</h3>
+<div class="grid">
+  <div><label>Mês</label><input type="month" id="fMes"></div>
+  <div><label>Categoria</label><select id="fCategoria"><option value="">Todas</option></select></div>
+  <div><label>Centro</label><select id="fCentro"><option value="">Todos</option></select></div>
+</div>
+<button class="action" onclick="gerarGraficos()">Aplicar filtros</button>
+<div class="grid" style="margin-top:20px">
+  <canvas id="gMes"></canvas>
+  <canvas id="gCat"></canvas>
+  <canvas id="gCentro"></canvas>
+</div>
 </section>
 
 </main>
 
 <script>
 let despesas = JSON.parse(localStorage.getItem('despesas')) || [];
+let g1=null,g2=null,g3=null;
 
-window.onload=()=>{
-  if(!document.getElementById('filtroCategoria')) return;
-  const cats=[...new Set(despesas.map(d=>d.categoria))];
-  const cens=[...new Set(despesas.map(d=>d.centro))];
-  cats.forEach(c=>{
-    const o=document.createElement('option');o.value=c;o.textContent=c;filtroCategoria.appendChild(o);
-  });
-  cens.forEach(c=>{
-    const o=document.createElement('option');o.value=c;o.textContent=c;filtroCentro.appendChild(o);
-  });
-}</option>`);
-  cens.forEach(c=>filtroCentro.innerHTML+=`<option>${c}</option>`);
-}(localStorage.getItem('despesas')) || [];
-
-function show(id){
+function showSection(id){
   document.querySelectorAll('section').forEach(s=>s.style.display='none');
-  const alvo=document.getElementById(id);
-  if(alvo) alvo.style.display='block';
-  if(id==='lista') render();
-  if(id==='relatorios') graficos();
+  const el=document.getElementById(id);
+  if(el) el.style.display='block';
+  if(id==='lista') renderTabela();
+  if(id==='relatorios') carregarFiltros();
 }
 
-function salvar(){
-  const f = nota.files[0];
-  const r = new FileReader();
+function salvarDespesa(){
+  const file=document.getElementById('nota').files[0];
+  if(!file) return alert('Anexe o PDF');
+  const r=new FileReader();
   r.onload=()=>{
-    const dt = new Date(data.value);
-    const pasta = `${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${centro.value}`;
+    const dt=new Date(data.value);
+    const pasta=`${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${centro.value}`;
     despesas.push({
       data:data.value,
       mes:data.value.slice(0,7),
@@ -150,92 +110,56 @@ function salvar(){
       nota:r.result
     });
     localStorage.setItem('despesas',JSON.stringify(despesas));
-    alert('Despesa salva na pasta lógica: '+pasta);
+    alert('Salvo em '+pasta);
   };
-  if(f)r.readAsDataURL(f);
-});
-    localStorage.setItem('despesas',JSON.stringify(despesas));
-    alert('Despesa salva');
-  };
-  if(f)r.readAsDataURL(f);
+  r.readAsDataURL(file);
 }
 
-function render(){
+function renderTabela(){
   tbody.innerHTML='';
   despesas.forEach(d=>{
     tbody.innerHTML+=`<tr>
-      <td>${d.data}</td><td>${d.categoria}</td><td>${d.centro}</td>
+      <td>${d.data}</td>
+      <td>${d.categoria}</td>
+      <td>${d.centro}</td>
       <td>R$ ${d.valor.toFixed(2)}</td>
       <td><span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span></td>
-      <td><a href="${d.nota}" target="_blank">PDF</a></td></tr>`;
-  })
+      <td><a href="${d.nota}" target="_blank">PDF</a></td>
+    </tr>`;
+  });
 }
 
-function agrupar(campo){
-  return despesas.reduce((a,d)=>{a[d[campo]]=(a[d[campo]]||0)+d.valor;return a;},{});
+function carregarFiltros(){
+  fCategoria.innerHTML='<option value="">Todas</option>';
+  fCentro.innerHTML='<option value="">Todos</option>';
+  [...new Set(despesas.map(d=>d.categoria))].forEach(c=>fCategoria.innerHTML+=`<option>${c}</option>`);
+  [...new Set(despesas.map(d=>d.centro))].forEach(c=>fCentro.innerHTML+=`<option>${c}</option>`);
 }
 
-function graficos(){
-  if(!document.getElementById('grafMes')) return;
-  const mes = document.getElementById('filtroMes').value;
-  const cat = document.getElementById('filtroCategoria').value;
-  const cen = document.getElementById('filtroCentro').value;
+function gerarGraficos(){
+  let dados=despesas.filter(d=>(!fMes.value||d.mes===fMes.value)&&(!fCategoria.value||d.categoria===fCategoria.value)&&(!fCentro.value||d.centro===fCentro.value));
 
-  let dados = despesas.filter(d=>
-    (!mes || d.mes===mes) &&
-    (!cat || d.categoria===cat) &&
-    (!cen || d.centro===cen)
-  );
+  const porMes=dados.reduce((a,d)=>{a[d.mes]=(a[d.mes]||0)+d.valor;return a;},{});
+  const porCat=dados.reduce((a,d)=>{a[d.categoria]=(a[d.categoria]||0)+d.valor;return a;},{});
+  const porCentro=dados.reduce((a,d)=>{a[d.centro]=(a[d.centro]||0)+d.valor;return a;},{});
 
-  const porMes = dados.reduce((a,d)=>{a[d.mes]=(a[d.mes]||0)+d.valor;return a;},{});
-  const porCat = dados.reduce((a,d)=>{a[d.categoria]=(a[d.categoria]||0)+d.valor;return a;},{});
-  const porCentro = dados.reduce((a,d)=>{a[d.centro]=(a[d.centro]||0)+d.valor;return a;},{});
+  if(g1) g1.destroy(); if(g2) g2.destroy(); if(g3) g3.destroy();
 
-  if(window.g1) g1.destroy();
-  if(window.g2) g2.destroy();
-  if(window.g3) g3.destroy();
-
-  g1=new Chart(document.getElementById('grafMes'),{
-    type:'bar',
-    data:{labels:Object.keys(porMes),datasets:[{data:Object.values(porMes)}]},
-    options:{responsive:true,maintainAspectRatio:false}
-  });
-
-  g2=new Chart(document.getElementById('grafCategoria'),{
-    type:'pie',
-    data:{labels:Object.keys(porCat),datasets:[{data:Object.values(porCat)}]},
-    options:{responsive:true,maintainAspectRatio:false}
-  });
-
-  g3=new Chart(document.getElementById('grafCentro'),{
-    type:'doughnut',
-    data:{labels:Object.keys(porCentro),datasets:[{data:Object.values(porCentro)}]},
-    options:{responsive:true,maintainAspectRatio:false}
-  });
-},{});
-  const porCat = dados.reduce((a,d)=>{a[d.categoria]=(a[d.categoria]||0)+d.valor;return a;},{});
-  const porCentro = dados.reduce((a,d)=>{a[d.centro]=(a[d.centro]||0)+d.valor;return a;},{});
-
-  if(window.g1)g1.destroy();if(window.g2)g2.destroy();if(window.g3)g3.destroy();
-
-  g1=new Chart(grafMes,{type:'bar',data:{labels:Object.keys(porMes),datasets:[{data:Object.values(porMes)}]},options:{responsive:true,maintainAspectRatio:false}});
-  g2=new Chart(grafCategoria,{type:'pie',data:{labels:Object.keys(porCat),datasets:[{data:Object.values(porCat)}]},options:{responsive:true,maintainAspectRatio:false}});
-  g3=new Chart(grafCentro,{type:'doughnut',data:{labels:Object.keys(porCentro),datasets:[{data:Object.values(porCentro)}]},options:{responsive:true,maintainAspectRatio:false}});
-}]}});
-  new Chart(grafCategoria,{type:'pie',data:{labels:Object.keys(agrupar('categoria')),datasets:[{data:Object.values(agrupar('categoria'))}]}});
-  new Chart(grafCentro,{type:'doughnut',data:{labels:Object.keys(agrupar('centro')),datasets:[{data:Object.values(agrupar('centro'))}]}});
+  g1=new Chart(gMes,{type:'bar',data:{labels:Object.keys(porMes),datasets:[{data:Object.values(porMes)}]},options:{maintainAspectRatio:false}});
+  g2=new Chart(gCat,{type:'pie',data:{labels:Object.keys(porCat),datasets:[{data:Object.values(porCat)}]},options:{maintainAspectRatio:false}});
+  g3=new Chart(gCentro,{type:'doughnut',data:{labels:Object.keys(porCentro),datasets:[{data:Object.values(porCentro)}]},options:{maintainAspectRatio:false}});
 }
 
 function exportarExcel(){
-  const ws = XLSX.utils.json_to_sheet(despesas);
-  const wb = XLSX.utils.book_new();
+  const ws=XLSX.utils.json_to_sheet(despesas);
+  const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Despesas');
   XLSX.writeFile(wb,'despesas.xlsx');
 }
 
 function exportarPDF(){
-  const {jsPDF}=window.jspdf;const pdf=new jsPDF();
-  let y=10;pdf.text('Relatório de Despesas',10,y);y+=10;
+  const {jsPDF}=window.jspdf;const pdf=new jsPDF();let y=10;
+  pdf.text('Relatório de Despesas',10,y);y+=10;
   despesas.forEach(d=>{pdf.text(`${d.data} | ${d.categoria} | ${d.centro} | R$ ${d.valor}`,10,y);y+=8});
   pdf.save('despesas.pdf');
 }
