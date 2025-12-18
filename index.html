@@ -87,7 +87,7 @@ canvas{max-height:240px;background:#020617;border-radius:12px;padding:6px}
 </main>
 
 <script>
-let despesas = JSON.parse(localStorage.getItem('despesas')) || [];
+let despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
 
 function showSection(id){
   document.querySelectorAll('section').forEach(s=>s.style.display='none');
@@ -96,36 +96,47 @@ function showSection(id){
 }
 
 function salvarDespesa(){
-  const fileNota=document.getElementById('nota').files[0];
-  const filePag=document.getElementById('comprovantePagamento').files[0];
-  const fileNeg=document.getElementById('comprovanteNegociacao').files[0];
+  const fileNota = document.getElementById('nota').files[0];
+  const filePag  = document.getElementById('comprovantePagamento').files[0];
+  const fileNeg  = document.getElementById('comprovanteNegociacao').files[0];
 
   if(!fileNota) return alert('Anexe a Nota Fiscal');
 
-  const readFile = file => new Promise(res=>{ if(!file) return res(null); const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); });
+  const readFile = file => new Promise(resolve=>{
+    if(!file) return resolve(null);
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.readAsDataURL(file);
+  });
 
-  Promise.all([readFile(fileNota), readFile(filePag), readFile(fileNeg)]).then(([nota,pag,neg])=>{
-    despesas.push({
-      razao:razao.value,
-      nfCliente:nfCliente.value,
-      uf:uf.value,
-      valorNFS:valorNFS.value,
-      valorDT:valorDT.value,
-      tipoVeiculo:tipoVeiculo.value,
-      numeroDT:numeroDT.value,
-      dataVencimento:dataVencimento.value,
-      cliente:cliente.value,
-      tipoServico:tipoServico.value,
-      embutimento:embutimento.value,
-      motivo:motivo.value,
-      fatoGerador:fatoGerador.value,
-      observacoes:observacoes.value,
-      status:status.value,
-      nota:nota,
-      comprovantePagamento:pag,
-      comprovanteNegociacao:neg
-    });
-    localStorage.setItem('despesas',JSON.stringify(despesas));
+  Promise.all([
+    readFile(fileNota),
+    readFile(filePag),
+    readFile(fileNeg)
+  ]).then(([nota, pag, neg])=>{
+    const registro = {
+      razao: document.getElementById('razao').value,
+      nfCliente: document.getElementById('nfCliente').value,
+      uf: document.getElementById('uf').value,
+      valorNFS: document.getElementById('valorNFS').value,
+      valorDT: document.getElementById('valorDT').value,
+      tipoVeiculo: document.getElementById('tipoVeiculo').value,
+      numeroDT: document.getElementById('numeroDT').value,
+      dataVencimento: document.getElementById('dataVencimento').value,
+      cliente: document.getElementById('cliente').value,
+      tipoServico: document.getElementById('tipoServico').value,
+      embutimento: document.getElementById('embutimento').value,
+      motivo: document.getElementById('motivo').value,
+      fatoGerador: document.getElementById('fatoGerador').value,
+      observacoes: document.getElementById('observacoes').value,
+      status: document.getElementById('status').value,
+      nota: nota,
+      comprovantePagamento: pag,
+      comprovanteNegociacao: neg
+    };
+
+    despesas.push(registro);
+    localStorage.setItem('despesas', JSON.stringify(despesas));
     alert('Despesa salva com sucesso');
   });
 }
