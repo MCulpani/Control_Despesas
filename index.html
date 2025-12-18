@@ -35,7 +35,7 @@
     .badge{padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold}
     .ok{background:#14532d;color:#22c55e}
     .pending{background:#422006;color:#facc15}
-    canvas{background:#020617;border-radius:12px;padding:10px}
+    canvas{background:#020617;border-radius:12px;padding:6px;max-height:260px}
   </style>
 </head>
 <body>
@@ -80,8 +80,26 @@
 </section>
 
 <section id="relatorios" class="card" style="display:none">
-  <h2>Gráficos e Indicadores</h2>
+  <h2>Relatórios e Análises</h2>
+
   <div class="grid">
+    <div>
+      <label>Período (Mês)</label>
+      <input type="month" id="filtroMes">
+    </div>
+    <div>
+      <label>Categoria</label>
+      <select id="filtroCategoria"><option value="">Todas</option></select>
+    </div>
+    <div>
+      <label>Centro de Custo</label>
+      <select id="filtroCentro"><option value="">Todos</option></select>
+    </div>
+  </div>
+
+  <button class="action" onclick="graficos()">Aplicar Filtros</button>
+
+  <div class="grid" style="margin-top:20px">
     <canvas id="grafMes"></canvas>
     <canvas id="grafCategoria"></canvas>
     <canvas id="grafCentro"></canvas>
@@ -93,13 +111,36 @@
 <script>
 let despesas = JSON.parse(localStorage.getItem('despesas')) || [];
 
+window.onload=()=>{
+  const cats=[...new Set(despesas.map(d=>d.categoria))];
+  const cens=[...new Set(despesas.map(d=>d.centro))];
+  cats.forEach(c=>filtroCategoria.innerHTML+=`<option>${c}</option>`);
+  cens.forEach(c=>filtroCentro.innerHTML+=`<option>${c}</option>`);
+}(localStorage.getItem('despesas')) || [];
+
 function show(id){document.querySelectorAll('section').forEach(s=>s.style.display='none');document.getElementById(id).style.display='block';if(id==='lista')render();if(id==='relatorios')graficos()}
 
 function salvar(){
   const f = nota.files[0];
   const r = new FileReader();
   r.onload=()=>{
-    despesas.push({data:data.value,categoria:categoria.value,centro:centro.value,valor:+valor.value,status:status.value,nota:r.result});
+    const dt = new Date(data.value);
+    const pasta = `${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${centro.value}`;
+    despesas.push({
+      data:data.value,
+      mes:data.value.slice(0,7),
+      categoria:categoria.value,
+      centro:centro.value,
+      valor:+valor.value,
+      status:status.value,
+      pastaPDF:pasta,
+      nota:r.result
+    });
+    localStorage.setItem('despesas',JSON.stringify(despesas));
+    alert('Despesa salva na pasta lógica: '+pasta);
+  };
+  if(f)r.readAsDataURL(f);
+});
     localStorage.setItem('despesas',JSON.stringify(despesas));
     alert('Despesa salva');
   };
@@ -122,7 +163,26 @@ function agrupar(campo){
 }
 
 function graficos(){
-  new Chart(grafMes,{type:'bar',data:{labels:[...new Set(despesas.map(d=>d.data.slice(0,7)))],datasets:[{data:Object.values(agrupar('data'))}]}});
+  const mes = filtroMes.value;
+  const cat = filtroCategoria.value;
+  const cen = filtroCentro.value;
+
+  let dados = despesas.filter(d=>
+    (!mes || d.mes===mes) &&
+    (!cat || d.categoria===cat) &&
+    (!cen || d.centro===cen)
+  );
+
+  const porMes = dados.reduce((a,d)=>{a[d.mes]=(a[d.mes]||0)+d.valor;return a;},{});
+  const porCat = dados.reduce((a,d)=>{a[d.categoria]=(a[d.categoria]||0)+d.valor;return a;},{});
+  const porCentro = dados.reduce((a,d)=>{a[d.centro]=(a[d.centro]||0)+d.valor;return a;},{});
+
+  if(window.g1)g1.destroy();if(window.g2)g2.destroy();if(window.g3)g3.destroy();
+
+  g1=new Chart(grafMes,{type:'bar',data:{labels:Object.keys(porMes),datasets:[{data:Object.values(porMes)}]},options:{responsive:true,maintainAspectRatio:false}});
+  g2=new Chart(grafCategoria,{type:'pie',data:{labels:Object.keys(porCat),datasets:[{data:Object.values(porCat)}]},options:{responsive:true,maintainAspectRatio:false}});
+  g3=new Chart(grafCentro,{type:'doughnut',data:{labels:Object.keys(porCentro),datasets:[{data:Object.values(porCentro)}]},options:{responsive:true,maintainAspectRatio:false}});
+}]}});
   new Chart(grafCategoria,{type:'pie',data:{labels:Object.keys(agrupar('categoria')),datasets:[{data:Object.values(agrupar('categoria'))}]}});
   new Chart(grafCentro,{type:'doughnut',data:{labels:Object.keys(agrupar('centro')),datasets:[{data:Object.values(agrupar('centro'))}]}});
 }
