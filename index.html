@@ -59,11 +59,15 @@ a{color:#38bdf8;text-decoration:none}
   <div><label>UF</label><input id="uf"></div>
   <div><label>Valor da NF-s</label><input type="number" id="valorNFS"></div>
   <div><label>Valor por DT</label><input type="number" id="valorDT"></div>
-  <div><label>Tipo Veículo</label><input id="tipoVeiculo"></div>
+  <div><label>Tipo de veículo</label><select id="tipoVeiculo"><option>Truck</option><option>Carreta</option><option>Bitrem</option><option>N/A</option></select></div>
   <div><label>Número DT</label><input id="numeroDT"></div>
   <div><label>Data Vencimento</label><input type="date" id="dataVencimento"></div>
   <div><label>Cliente</label><input id="cliente"></div>
-  <div><label>Tipo Serviço</label><input id="tipoServico"></div>
+  <div><label>Tipo de Serviço</label><select id="tipoServico"><option>Taxa de Desembarque</option><option>Taxa de Embarque</option><option>Armazenagem</option><option>Travessia de Balsa</option><option>Descarga Manual</option><option>Redespacho</option><option>Descarga Maquinário</option></select></div
+  <div><label>Embutimento?</label><select id="embutimento"><option>Sim</option><option>Não</option></select></div>
+  <div><label>Motivo?</label><select id="motivo"><option>Sim</option><option>Não</option></select></div>
+  <div><label>Fato gerador</label><input id="fatoGerador"></div>
+  <div><label>Observações</label><input id="observacoes"></div>
   <div><label>Status</label>
     <select id="status">
       <option>Pendente</option>
@@ -144,6 +148,10 @@ function salvar(){
       dataVencimento:dataVencimento.value,
       cliente:cliente.value,
       tipoServico:tipoServico.value,
+      embutimento:embutimento.value,
+      motivo:motivo.value,
+      fatoGerador:fatoGerador.value,
+      observacoes:observacoes.value,
       status:status.value,
       nota:n,
       pag:p,
@@ -201,6 +209,10 @@ function render(){
 <td>${edit?cell(d.dataVencimento,i):d.dataVencimento||''}</td>
 <td>${edit?cell(d.cliente,i):d.cliente||''}</td>
 <td>${edit?cell(d.tipoServico,i):d.tipoServico||''}</td>
+<td>${edit?cell(d.embutimento,i):d.embutimento||''}</td>
+<td>${edit?cell(d.motivo,i):d.motivo||''}</td>
+<td>${edit?cell(d.fatoGerador,i):d.fatoGerador||''}</td>
+<td>${edit?cell(d.observacoes,i):d.observacoes||''}</td>
 <td>${edit?
   `<select data-row="${i}">
     <option ${d.status==='Pendente'?'selected':''}>Pendente</option>
