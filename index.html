@@ -179,7 +179,7 @@ function cancelar(){ editRow=null; render(); }
 
 function salvarLinha(i){
   const row = document.querySelectorAll('[data-row="'+i+'"]');
-  const keys = ['razao','nfCliente','uf','valorNFS','valorDT','tipoVeiculo','numeroDT','dataVencimento','cliente','tipoServico','embutimento','motivo','fatoGerador','Observacoes','status'];
+  const keys = ['razao','nfCliente','uf','valorNFS','valorDT','tipoVeiculo','numeroDT','dataVencimento','cliente','tipoServico','embutimento','motivo','fatoGerador','observacoes','status'];
   keys.forEach((k,idx)=>despesas[i][k]=row[idx].value);
   localStorage.setItem('despesas',JSON.stringify(despesas));
   editRow=null; render();
