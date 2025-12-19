@@ -94,6 +94,7 @@ a{color:#38bdf8;text-decoration:none}
 <tr>
 <th>Razão</th><th>NF</th><th>UF</th><th>Valor NF</th><th>Valor DT</th>
 <th>Veículo</th><th>DT</th><th>Venc.</th><th>Cliente</th><th>Serviço</th>
+<th>Embutimento?</th><th>Motivo?</th><th>Fato Gerador</th><th>Observações</th>
 <th>Status</th><th>Nota</th><th>Pagto</th><th>Negociação</th><th>Ações</th>
 </tr>
 </thead>
@@ -178,7 +179,7 @@ function cancelar(){ editRow=null; render(); }
 
 function salvarLinha(i){
   const row = document.querySelectorAll('[data-row="'+i+'"]');
-  const keys = ['razao','nfCliente','uf','valorNFS','valorDT','tipoVeiculo','numeroDT','dataVencimento','cliente','tipoServico','status'];
+  const keys = ['razao','nfCliente','uf','valorNFS','valorDT','tipoVeiculo','numeroDT','dataVencimento','cliente','tipoServico','embutimento','motivo','fatoGerador','Observacoes','status'];
   keys.forEach((k,idx)=>despesas[i][k]=row[idx].value);
   localStorage.setItem('despesas',JSON.stringify(despesas));
   editRow=null; render();
@@ -246,6 +247,10 @@ function exportarExcel(){
     Vencimento: d.dataVencimento,
     Cliente: d.cliente,
     Servico: d.tipoServico,
+    Embutimento: d.embutimento,
+    Motivo: d.motivo,
+    Fato_Gerador: d.fatoGerador,
+    Observacoes: d.observacoes,
     Status: d.status
   })));
 
@@ -261,7 +266,7 @@ function exportarPDF(){
   const cols = ["Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
   const rows = despesas.map(d => [
     d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
-    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,d.status
+    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,d.embutimento,d.motivo,d.fatoGerador,d.observacoes,d.status
   ]);
 
   doc.text("Relatório de Despesas",40,30);
