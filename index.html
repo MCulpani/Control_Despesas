@@ -5,92 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Gestão de Despesas Operacionais</title>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
-function exportarExcel(){
-  const ws = XLSX.utils.json_to_sheet(despesas.map(d => ({
-    Razao: d.razao,
-    NF: d.nfCliente,
-    UF: d.uf,
-    Valor_NF: d.valorNFS,
-    Valor_DT: d.valorDT,
-    Veiculo: d.tipoVeiculo,
-    DT: d.numeroDT,
-    Vencimento: d.dataVencimento,
-    Cliente: d.cliente,
-    Servico: d.tipoServico,
-    Status: d.status
-  })));
+<!-- Exportação Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Despesas");
-  XLSX.writeFile(wb, "despesas.xlsx");
-}
-
-function exportarPDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("l","pt","a4");
-
-  const cols = ["Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
-  const rows = despesas.map(d => [
-    d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
-    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,d.status
-  ]);
-
-  doc.text("Relatório de Despesas",40,30);
-  doc.autoTable({
-    head:[cols],
-    body:rows,
-    startY:50,
-    styles:{fontSize:8}
-  });
-
-  doc.save("despesas.pdf");
-}
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js">
-function exportarExcel(){
-  const ws = XLSX.utils.json_to_sheet(despesas.map(d => ({
-    Razao: d.razao,
-    NF: d.nfCliente,
-    UF: d.uf,
-    Valor_NF: d.valorNFS,
-    Valor_DT: d.valorDT,
-    Veiculo: d.tipoVeiculo,
-    DT: d.numeroDT,
-    Vencimento: d.dataVencimento,
-    Cliente: d.cliente,
-    Servico: d.tipoServico,
-    Status: d.status
-  })));
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Despesas");
-  XLSX.writeFile(wb, "despesas.xlsx");
-}
-
-function exportarPDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("l","pt","a4");
-
-  const cols = ["Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
-  const rows = despesas.map(d => [
-    d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
-    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,d.status
-  ]);
-
-  doc.text("Relatório de Despesas",40,30);
-  doc.autoTable({
-    head:[cols],
-    body:rows,
-    startY:50,
-    styles:{fontSize:8}
-  });
-
-  doc.save("despesas.pdf");
-}
-</script>
-
+<!-- Exportação PDF -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.29/dist/jspdf.plugin.autotable.min.js"></script>
 
 <style>
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#e5e7eb}
