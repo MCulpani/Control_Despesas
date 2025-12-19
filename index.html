@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Gestão de Despesas Operacionais</title>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
 <style>
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#e5e7eb}
 header{background:#020617;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
@@ -21,9 +24,6 @@ th,td{padding:10px;border-bottom:1px solid #1f2933}
 .ok{background:#14532d;color:#22c55e}
 .pending{background:#422006;color:#facc15}
 a{color:#38bdf8;text-decoration:none}
-.action-btn{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;font-size:12px}
-.edit{background:#facc15;color:#000}
-.delete{background:#ef4444;color:#fff}
 </style>
 </head>
 <body>
@@ -41,28 +41,38 @@ a{color:#38bdf8;text-decoration:none}
 <section id="cadastro" class="card">
 <h3>Nova Despesa</h3>
 <div class="grid">
-  <div><label>Razão Social</label><input id="razao"></div>
+  <div><label>Razão Social Prestador</label><input id="razao"></div>
   <div><label>NF Cliente</label><input id="nfCliente"></div>
   <div><label>UF</label><input id="uf"></div>
-  <div><label>Valor NF</label><input type="number" id="valorNFS"></div>
-  <div><label>Valor DT</label><input type="number" id="valorDT"></div>
-  <div><label>Tipo Veículo</label><select id="tipoVeiculo"><option>Truck</option><option>Carreta</option><option>Bitrem</option><option>Rodotrem</option><option>VUC</option></select></div>
+  <div><label>Valor da NF-s</label><input type="number" id="valorNFS"></div>
+  <div><label>Valor por DT</label><input type="number" id="valorDT"></div>
+  <div><label>Tipo Veículo</label><input id="tipoVeiculo"></div>
   <div><label>Número DT</label><input id="numeroDT"></div>
-  <div><label>Vencimento</label><input type="date" id="dataVencimento"></div>
+  <div><label>Data Vencimento</label><input type="date" id="dataVencimento"></div>
   <div><label>Cliente</label><input id="cliente"></div>
-  <div><label>Tipo Serviço</label><select id="tipoServico"><option>Taxa de Embarque</option><option>Taxa de Desembarque</option><option>Armazenagem</option><option>Descarga Manual</option><option>Redespacho</option></select></div>
+  <div><label>Tipo Serviço</label><input id="tipoServico"></div>
+  <div><label>Embutimento</label><input id="embutimento"></div>
+  <div><label>Motivo</label><input id="motivo"></div>
+  <div><label>Fato Gerador</label><input id="fatoGerador"></div>
+  <div><label>Observações</label><input id="observacoes"></div>
   <div><label>Status</label><select id="status"><option>Pendente</option><option>Aprovado</option></select></div>
   <div><label>Nota Fiscal</label><input type="file" id="nota"></div>
+  <div><label>Comprovante Pagamento</label><input type="file" id="compPag"></div>
+  <div><label>Comprovante Negociação</label><input type="file" id="compNeg"></div>
 </div>
-<button class="action" onclick="salvar()">Salvar</button>
+<button class="action" onclick="salvar()">Salvar Despesa</button>
 </section>
 
-<section id="despesas" class="card" style="display:none">
+<section id="lista" class="card" style="display:none">
 <h3>Despesas</h3>
+<button onclick="exportarExcel()">📥 Excel</button>
+<button onclick="exportarPDF()">📄 PDF</button>
 <table>
 <thead>
 <tr>
-<th>Razão</th><th>NF</th><th>UF</th><th>Valor NF</th><th>Status</th><th>Ações</th>
+<th>Razão</th><th>NF</th><th>UF</th><th>Valor NF</th><th>Valor DT</th>
+<th>Veículo</th><th>DT</th><th>Venc.</th><th>Cliente</th><th>Serviço</th>
+<th>Status</th><th>Nota</th><th>Pagto</th><th>Negociação</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
@@ -72,36 +82,54 @@ a{color:#38bdf8;text-decoration:none}
 </main>
 
 <script>
-let despesas = JSON.parse(localStorage.getItem('despesas')||'[]');
-let editIndex = null;
+let despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
 
 function mostrar(id){
-  cadastro.style.display='none';
-  despesasSection.style.display='none';
+  document.getElementById('cadastro').style.display='none';
+  document.getElementById('despesas').style.display='none';
   document.getElementById(id).style.display='block';
   if(id==='despesas') render();
 }
 
-const despesasSection = document.getElementById('despesas');
+function lerArquivo(file){
+  return new Promise(res=>{
+    if(!file) return res(null);
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.readAsDataURL(file);
+  });
+}
 
 function salvar(){
-  const registro = {
-    razao:razao.value,
-    nfCliente:nfCliente.value,
-    uf:uf.value,
-    valorNFS:valorNFS.value,
-    status:status.value
-  };
+  const fNota = document.getElementById('nota').files[0];
+  if(!fNota){alert('Anexe a nota fiscal');return;}
 
-  if(editIndex !== null){
-    despesas[editIndex] = registro;
-    editIndex = null;
-  } else {
-    despesas.push(registro);
-  }
-
-  localStorage.setItem('despesas',JSON.stringify(despesas));
-  alert('Salvo com sucesso');
+  Promise.all([
+    lerArquivo(fNota),
+    lerArquivo(document.getElementById('compPag').files[0]),
+    lerArquivo(document.getElementById('compNeg').files[0])
+  ]).then(([nota,pag,neg])=>{
+    despesas.push({
+      razao:razao.value,
+      nfCliente:nfCliente.value,
+      uf:uf.value,
+      valorNFS:valorNFS.value,
+      valorDT:valorDT.value,
+      tipoVeiculo:tipoVeiculo.value,
+      numeroDT:numeroDT.value,
+      dataVencimento:dataVencimento.value,
+      cliente:cliente.value,
+      tipoServico:tipoServico.value,
+      embutimento:embutimento.value,
+      motivo:motivo.value,
+      fatoGerador:fatoGerador.value,
+      observacoes:observacoes.value,
+      status:status.value,
+      nota, pag, neg
+    });
+    localStorage.setItem('despesas',JSON.stringify(despesas));
+    alert('Despesa salva com sucesso');
+  });
 }
 
 function editar(i){
@@ -123,19 +151,22 @@ function excluir(i){
   }
 }
 
+
 function render(){
   tbody.innerHTML='';
-  despesas.forEach((d,i)=>{
-    tbody.innerHTML+=`
-    <tr>
-      <td>${d.razao}</td>
-      <td>${d.nfCliente}</td>
-      <td>${d.uf}</td>
-      <td>${d.valorNFS}</td>
+  despesas.forEach(d=>{
+    tbody.innerHTML+=`<tr>
+      <td>${d.razao||''}</td><td>${d.nfCliente||''}</td><td>${d.uf||''}</td>
+      <td>${d.valorNFS||''}</td><td>${d.valorDT||''}</td><td>${d.tipoVeiculo||''}</td>
+      <td>${d.numeroDT||''}</td><td>${d.dataVencimento||''}</td><td>${d.cliente||''}</td>
+      <td>${d.tipoServico||''}</td>
       <td><span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span></td>
+      <td>${d.nota?`<a href="${d.nota}" target="_blank">Abrir</a>`:'-'}</td>
+      <td>${d.pag?`<a href="${d.pag}" target="_blank">Abrir</a>`:'-'}</td>
+      <td>${d.neg?`<a href="${d.neg}" target="_blank">Abrir</a>`:'-'}</td>
       <td>
         <button class="action-btn edit" onclick="editar(${i})">Editar</button>
-        <button class="action-btn delete" onclick="excluir(${i})">Excluir</button>
+        <button class="action-btn delete" onclick="excluir(${i})">Excluir</button>	
       </td>
     </tr>`;
   });
