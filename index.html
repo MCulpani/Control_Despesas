@@ -59,68 +59,37 @@ a{color:#38bdf8;text-decoration:none}
     <button onclick="mostrar('cadastro')">Nova</button>
     <button onclick="mostrar('despesas')">Despesas</button>
   </div>
+
+    <div>
+      </div>
 </header>
+
 
 <main>
 
 <section id="cadastro" class="card">
 <h3>Nova Despesa</h3>
-
 <div class="grid">
   <div><label>Razão Social Prestador</label><input id="razao"></div>
   <div><label>NF Cliente</label><input id="nfCliente"></div>
   <div><label>UF</label><input id="uf"></div>
   <div><label>Valor da NF-s</label><input type="number" id="valorNFS"></div>
   <div><label>Valor por DT</label><input type="number" id="valorDT"></div>
-
-  <div>
-    <label>Tipo de veículo</label>
-    <select id="tipoVeiculo">
-      <option>Truck</option>
-      <option>Carreta</option>
-      <option>Bitrem</option>
-      <option>N/A</option>
-    </select>
-  </div>
-
+  <div><label>Tipo de veículo</label><select id="tipoVeiculo"><option>Truck</option><option>Carreta</option><option>Bitrem</option><option>N/A</option></select></div>
   <div><label>Número DT</label><input id="numeroDT"></div>
   <div><label>Data Vencimento</label><input type="date" id="dataVencimento"></div>
   <div><label>Cliente</label><input id="cliente"></div>
-
-  <div>
-    <label>Tipo de Serviço</label>
-    <select id="tipoServico">
-      <option>Taxa de Desembarque</option>
-      <option>Taxa de Embarque</option>
-      <option>Armazenagem</option>
-      <option>Travessia de Balsa</option>
-      <option>Descarga Manual</option>
-      <option>Redespacho</option>
-      <option>Descarga Maquinário</option>
-    </select>
-  </div>
-
+  <div><label>Tipo de Serviço</label><select id="tipoServico"><option>Taxa de Desembarque</option><option>Taxa de Embarque</option><option>Armazenagem</option><option>Travessia de Balsa</option><option>Descarga Manual</option><option>Redespacho</option><option>Descarga Maquinário</option></select></div
   <div><label>Embutimento?</label><select id="embutimento"><option>Sim</option><option>Não</option></select></div>
   <div><label>Motivo?</label><select id="motivo"><option>Sim</option><option>Não</option></select></div>
-
-  <div class="col-2">
-    <label>Fato gerador</label>
-    <input id="fatoGerador">
-  </div>
-
-  <div class="col-3">
-    <label>Observações</label>
-    <input id="observacoes">
-  </div>
-
-  <div>
-    <label>Status</label>
+  <div><label>Fato gerador</label><input id="fatoGerador"></div>
+  <div><label>Observações</label><input id="observacoes"></div>
+  <div><label>Status</label>
     <select id="status">
       <option>Pendente</option>
       <option>Aprovado</option>
     </select>
   </div>
-
   <div><label>Nota Fiscal</label><input type="file" id="nota"></div>
   <div><label>Comprovante Pagamento</label><input type="file" id="compPag"></div>
   <div><label>Comprovante Negociação</label><input type="file" id="compNeg"></div>
@@ -132,18 +101,16 @@ a{color:#38bdf8;text-decoration:none}
 
 <section id="despesas" class="card" style="display:none">
 <h3>Despesas Cadastradas</h3>
-
 <div style="margin-bottom:12px">
-  <button onclick="exportarExcel()" style="margin-right:6px;padding:8px 14px;border:none;border-radius:8px;background:#22c55e;font-weight:bold;cursor:pointer">Exportar Excel</button>
-  <button onclick="exportarPDF()" style="padding:8px 14px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-weight:bold;cursor:pointer">Exportar PDF</button>
+<button onclick="exportarExcel()" style="margin-right:6px;padding:8px 14px;border:none;border-radius:8px;background:#22c55e;font-weight:bold;cursor:pointer">Exportar Excel</button>
+<button onclick="exportarPDF()" style="padding:8px 14px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-weight:bold;cursor:pointer">Exportar PDF</button>
 </div>
-
 <table>
 <thead>
 <tr>
 <th>Razão</th><th>NF</th><th>UF</th><th>Valor NF</th><th>Valor DT</th>
 <th>Veículo</th><th>DT</th><th>Venc.</th><th>Cliente</th><th>Serviço</th>
-<th>Embut.</th><th>Motivo</th><th>Fato Gerador</th><th>Observações</th>
+<th>Embutimento?</th><th>Motivo?</th><th>Fato Gerador</th><th>Observações</th>
 <th>Status</th><th>Nota</th><th>Pagto</th><th>Negociação</th><th>Ações</th>
 </tr>
 </thead>
@@ -156,6 +123,9 @@ a{color:#38bdf8;text-decoration:none}
 <script>
 let despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
 let editRow = null;
+
+const cadastro = document.getElementById('cadastro');
+const despesasSec = document.getElementById('despesas');
 
 function mostrar(id){
   cadastro.style.display='none';
@@ -212,54 +182,55 @@ function salvar(){
 }
 
 function novaDespesa(){
-  document.querySelectorAll('#cadastro input, #cadastro select').forEach(c=>{
-    if(c.type==='file') c.value='';
-    else c.value='';
+  const campos = document.querySelectorAll('#cadastro input, #cadastro select');
+  campos.forEach(c=>{
+    if(c.type === 'file') c.value = '';
+    else c.value = '';
   });
+  razao.focus();
 }
 
-function editar(i){editRow=i;render()}
-function cancelar(){editRow=null;render()}
+function editar(i){ editRow=i; render(); }
+function cancelar(){ editRow=null; render(); }
 
 function salvarLinha(i){
-  const row=document.querySelectorAll('[data-row="'+i+'"]');
-  const keys=[
-    'razao','nfCliente','uf','valorNFS','valorDT','tipoVeiculo',
-    'numeroDT','dataVencimento','cliente','tipoServico',
-    'embutimento','motivo','fatoGerador','observacoes','status'
-  ];
+  const row = document.querySelectorAll('[data-row="'+i+'"]');
+  const keys = ['razao','nfCliente','uf','valorNFS','valorDT','tipoVeiculo','numeroDT','dataVencimento','cliente','tipoServico','embutimento','motivo','fatoGerador','observacoes','status'];
   keys.forEach((k,idx)=>despesas[i][k]=row[idx].value);
   localStorage.setItem('despesas',JSON.stringify(despesas));
-  editRow=null;render();
+  editRow=null; render();
 }
 
-function cell(v,i,field){
-  if(field==='observacoes'){
-    return `<textarea data-row="${i}" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${v||''}</textarea>`;
+function excluir(i){
+  if(confirm('Deseja excluir esta despesa?')){
+    despesas.splice(i,1);
+    localStorage.setItem('despesas',JSON.stringify(despesas));
+    render();
   }
-  return `<input data-row="${i}" value="${v||''}">`;
 }
+
+function cell(v,i){return `<input data-row="${i}" value="${v||''}">`}
 
 function render(){
   tbody.innerHTML='';
   despesas.forEach((d,i)=>{
-    const e=editRow===i;
+    const edit = editRow===i;
     tbody.innerHTML+=`<tr>
-<td>${e?cell(d.razao,i):d.razao||''}</td>
-<td>${e?cell(d.nfCliente,i):d.nfCliente||''}</td>
-<td>${e?cell(d.uf,i):d.uf||''}</td>
-<td>${e?cell(d.valorNFS,i):d.valorNFS||''}</td>
-<td>${e?cell(d.valorDT,i):d.valorDT||''}</td>
-<td>${e?cell(d.tipoVeiculo,i):d.tipoVeiculo||''}</td>
-<td>${e?cell(d.numeroDT,i):d.numeroDT||''}</td>
-<td>${e?cell(d.dataVencimento,i):d.dataVencimento||''}</td>
-<td>${e?cell(d.cliente,i):d.cliente||''}</td>
-<td>${e?cell(d.tipoServico,i):d.tipoServico||''}</td>
-<td>${e?cell(d.embutimento,i):d.embutimento||''}</td>
-<td>${e?cell(d.motivo,i):d.motivo||''}</td>
-<td>${e?cell(d.fatoGerador,i):d.fatoGerador||''}</td>
-<td>${e?cell(d.observacoes,i,'observacoes'):d.observacoes||''}</td>
-<td>${e?
+<td>${edit?cell(d.razao,i):d.razao||''}</td>
+<td>${edit?cell(d.nfCliente,i):d.nfCliente||''}</td>
+<td>${edit?cell(d.uf,i):d.uf||''}</td>
+<td>${edit?cell(d.valorNFS,i):d.valorNFS||''}</td>
+<td>${edit?cell(d.valorDT,i):d.valorDT||''}</td>
+<td>${edit?cell(d.tipoVeiculo,i):d.tipoVeiculo||''}</td>
+<td>${edit?cell(d.numeroDT,i):d.numeroDT||''}</td>
+<td>${edit?cell(d.dataVencimento,i):d.dataVencimento||''}</td>
+<td>${edit?cell(d.cliente,i):d.cliente||''}</td>
+<td>${edit?cell(d.tipoServico,i):d.tipoServico||''}</td>
+<td>${edit?cell(d.embutimento,i):d.embutimento||''}</td>
+<td>${edit?cell(d.motivo,i):d.motivo||''}</td>
+<td>${edit?cell(d.fatoGerador,i):d.fatoGerador||''}</td>
+<td>${edit?cell(d.observacoes,i):d.observacoes||''}</td>
+<td>${edit?
   `<select data-row="${i}">
     <option ${d.status==='Pendente'?'selected':''}>Pendente</option>
     <option ${d.status==='Aprovado'?'selected':''}>Aprovado</option>
@@ -270,7 +241,7 @@ function render(){
 <td>${d.pag?`<a href="${d.pag}" target="_blank">Abrir</a>`:'-'}</td>
 <td>${d.neg?`<a href="${d.neg}" target="_blank">Abrir</a>`:'-'}</td>
 <td>
-${e?
+${edit?
 `<button class="btn-sm save" onclick="salvarLinha(${i})">Salvar</button>
  <button class="btn-sm cancel" onclick="cancelar()">Cancelar</button>`:
 `<button class="btn-sm edit" onclick="editar(${i})">Editar</button>
@@ -281,25 +252,51 @@ ${e?
 }
 
 function exportarExcel(){
-  const ws=XLSX.utils.json_to_sheet(despesas);
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'Despesas');
-  XLSX.writeFile(wb,'despesas.xlsx');
+  const ws = XLSX.utils.json_to_sheet(despesas.map(d => ({
+    Razao: d.razao,
+    NF: d.nfCliente,
+    UF: d.uf,
+    Valor_NF: d.valorNFS,
+    Valor_DT: d.valorDT,
+    Veiculo: d.tipoVeiculo,
+    DT: d.numeroDT,
+    Vencimento: d.dataVencimento,
+    Cliente: d.cliente,
+    Servico: d.tipoServico,
+    Embutimento: d.embutimento,
+    Motivo: d.motivo,
+    Fato_Gerador: d.fatoGerador,
+    Observacoes: d.observacoes,
+    Status: d.status
+  })));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Despesas");
+  XLSX.writeFile(wb, "despesas.xlsx");
 }
 
 function exportarPDF(){
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF('l','pt','a4');
-  doc.text('Relatório de Despesas',40,30);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("l","pt","a4");
+
+  const cols = ["Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
+  const rows = despesas.map(d => [
+    d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
+    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,d.embutimento,d.motivo,d.fatoGerador,d.observacoes,d.status
+  ]);
+
+  doc.text("Relatório de Despesas",40,30);
   doc.autoTable({
-    head:[Object.keys(despesas[0]||{})],
-    body:despesas.map(d=>Object.values(d)),
+    head:[cols],
+    body:rows,
     startY:50,
     styles:{fontSize:8}
   });
-  doc.save('despesas.pdf');
+
+  doc.save("despesas.pdf");
 }
 </script>
+
 
 </body>
 </html>
