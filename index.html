@@ -63,10 +63,8 @@ a{color:#38bdf8;text-decoration:none}
 <button class="action" onclick="salvar()">Salvar Despesa</button>
 </section>
 
-<section id="lista" class="card" style="display:none">
-<h3>Despesas</h3>
-<button onclick="exportarExcel()">📥 Excel</button>
-<button onclick="exportarPDF()">📄 PDF</button>
+<section id="despesas" class="card" style="display:none">
+<h3>Despesas Cadastradas</h3>
 <table>
 <thead>
 <tr>
@@ -120,37 +118,13 @@ function salvar(){
       dataVencimento:dataVencimento.value,
       cliente:cliente.value,
       tipoServico:tipoServico.value,
-      embutimento:embutimento.value,
-      motivo:motivo.value,
-      fatoGerador:fatoGerador.value,
-      observacoes:observacoes.value,
       status:status.value,
       nota, pag, neg
     });
     localStorage.setItem('despesas',JSON.stringify(despesas));
-    alert('Despesa salva com sucesso');
+    alert('Despesa salva');
   });
 }
-
-function editar(i){
-  const d = despesas[i];
-  razao.value = d.razao;
-  nfCliente.value = d.nfCliente;
-  uf.value = d.uf;
-  valorNFS.value = d.valorNFS;
-  status.value = d.status;
-  editIndex = i;
-  mostrar('cadastro');
-}
-
-function excluir(i){
-  if(confirm('Deseja excluir esta despesa?')){
-    despesas.splice(i,1);
-    localStorage.setItem('despesas',JSON.stringify(despesas));
-    render();
-  }
-}
-
 
 function render(){
   tbody.innerHTML='';
@@ -164,10 +138,6 @@ function render(){
       <td>${d.nota?`<a href="${d.nota}" target="_blank">Abrir</a>`:'-'}</td>
       <td>${d.pag?`<a href="${d.pag}" target="_blank">Abrir</a>`:'-'}</td>
       <td>${d.neg?`<a href="${d.neg}" target="_blank">Abrir</a>`:'-'}</td>
-      <td>
-        <button class="action-btn edit" onclick="editar(${i})">Editar</button>
-        <button class="action-btn delete" onclick="excluir(${i})">Excluir</button>	
-      </td>
     </tr>`;
   });
 }
