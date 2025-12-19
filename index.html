@@ -5,8 +5,92 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Gestão de Despesas Operacionais</title>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+function exportarExcel(){
+  const ws = XLSX.utils.json_to_sheet(despesas.map(d => ({
+    Razao: d.razao,
+    NF: d.nfCliente,
+    UF: d.uf,
+    Valor_NF: d.valorNFS,
+    Valor_DT: d.valorDT,
+    Veiculo: d.tipoVeiculo,
+    DT: d.numeroDT,
+    Vencimento: d.dataVencimento,
+    Cliente: d.cliente,
+    Servico: d.tipoServico,
+    Status: d.status
+  })));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Despesas");
+  XLSX.writeFile(wb, "despesas.xlsx");
+}
+
+function exportarPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("l","pt","a4");
+
+  const cols = ["Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
+  const rows = despesas.map(d => [
+    d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
+    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,d.status
+  ]);
+
+  doc.text("Relatório de Despesas",40,30);
+  doc.autoTable({
+    head:[cols],
+    body:rows,
+    startY:50,
+    styles:{fontSize:8}
+  });
+
+  doc.save("despesas.pdf");
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js">
+function exportarExcel(){
+  const ws = XLSX.utils.json_to_sheet(despesas.map(d => ({
+    Razao: d.razao,
+    NF: d.nfCliente,
+    UF: d.uf,
+    Valor_NF: d.valorNFS,
+    Valor_DT: d.valorDT,
+    Veiculo: d.tipoVeiculo,
+    DT: d.numeroDT,
+    Vencimento: d.dataVencimento,
+    Cliente: d.cliente,
+    Servico: d.tipoServico,
+    Status: d.status
+  })));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Despesas");
+  XLSX.writeFile(wb, "despesas.xlsx");
+}
+
+function exportarPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("l","pt","a4");
+
+  const cols = ["Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
+  const rows = despesas.map(d => [
+    d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
+    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,d.status
+  ]);
+
+  doc.text("Relatório de Despesas",40,30);
+  doc.autoTable({
+    head:[cols],
+    body:rows,
+    startY:50,
+    styles:{fontSize:8}
+  });
+
+  doc.save("despesas.pdf");
+}
+</script>
+
 
 <style>
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#e5e7eb}
@@ -17,7 +101,7 @@ main{padding:20px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
 label{font-size:12px;color:#9ca3af}
 input,select{width:100%;min-height:32px;padding:6px;border-radius:6px;border:1px solid #374151;background:#020617;color:#e5e7eb;font-size:12px}
-button.action{margin-top:16px;padding:12px;border:none;border-radius:10px;background:#22c55e;font-weight:bold;cursor:pointer}
+button.action{margin-top:16px;padding:12px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
 table{width:100%;border-collapse:collapse;font-size:13px;text-align:center}
 th,td{padding:8px;border-bottom:1px solid #1f2933}
 .badge{padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold}
@@ -39,7 +123,11 @@ a{color:#38bdf8;text-decoration:none}
     <button onclick="mostrar('cadastro')">Nova</button>
     <button onclick="mostrar('despesas')">Despesas</button>
   </div>
+
+    <div>
+      </div>
 </header>
+
 
 <main>
 
@@ -56,20 +144,27 @@ a{color:#38bdf8;text-decoration:none}
   <div><label>Data Vencimento</label><input type="date" id="dataVencimento"></div>
   <div><label>Cliente</label><input id="cliente"></div>
   <div><label>Tipo Serviço</label><input id="tipoServico"></div>
-  <div><label>Embutimento</label><input id="embutimento"></div>
-  <div><label>Motivo</label><input id="motivo"></div>
-  <div><label>Fato Gerador</label><input id="fatoGerador"></div>
-  <div><label>Observações</label><input id="observacoes"></div>
-  <div><label>Status</label><select id="status"><option>Pendente</option><option>Aprovado</option></select></div>
+  <div><label>Status</label>
+    <select id="status">
+      <option>Pendente</option>
+      <option>Aprovado</option>
+    </select>
+  </div>
   <div><label>Nota Fiscal</label><input type="file" id="nota"></div>
   <div><label>Comprovante Pagamento</label><input type="file" id="compPag"></div>
   <div><label>Comprovante Negociação</label><input type="file" id="compNeg"></div>
 </div>
-<button class="action" onclick="salvar()">Salvar Despesa</button>
+
+<button class="action" style="background:#22c55e" onclick="salvar()">Salvar Despesa</button>
+<button class="action" style="background:#38bdf8;margin-left:10px" onclick="novaDespesa()">Nova Despesa</button>
 </section>
 
 <section id="despesas" class="card" style="display:none">
 <h3>Despesas Cadastradas</h3>
+<div style="margin-bottom:12px">
+<button onclick="exportarExcel()" style="margin-right:6px;padding:8px 14px;border:none;border-radius:8px;background:#22c55e;font-weight:bold;cursor:pointer">Exportar Excel</button>
+<button onclick="exportarPDF()" style="padding:8px 14px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-weight:bold;cursor:pointer">Exportar PDF</button>
+</div>
 <table>
 <thead>
 <tr>
@@ -88,13 +183,15 @@ a{color:#38bdf8;text-decoration:none}
 let despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
 let editRow = null;
 
+const cadastro = document.getElementById('cadastro');
+const despesasSec = document.getElementById('despesas');
+
 function mostrar(id){
   cadastro.style.display='none';
   despesasSec.style.display='none';
   document.getElementById(id).style.display='block';
   if(id==='despesas') render();
 }
-const despesasSec = document.getElementById('despesas');
 
 function lerArquivo(file){
   return new Promise(res=>{
@@ -106,20 +203,46 @@ function lerArquivo(file){
 }
 
 function salvar(){
-  const fNota = nota.files[0];
-  if(!fNota){alert('Anexe a nota fiscal');return;}
-  Promise.all([lerArquivo(fNota),lerArquivo(compPag.files[0]),lerArquivo(compNeg.files[0])])
-  .then(([n,p,ne])=>{
+  if(!nota.files[0]){
+    alert('Anexe a nota fiscal');
+    return;
+  }
+
+  Promise.all([
+    lerArquivo(nota.files[0]),
+    lerArquivo(compPag.files[0]),
+    lerArquivo(compNeg.files[0])
+  ]).then(([n,p,ne])=>{
     despesas.push({
-      razao:razao.value,nfCliente:nfCliente.value,uf:uf.value,
-      valorNFS:valorNFS.value,valorDT:valorDT.value,tipoVeiculo:tipoVeiculo.value,
-      numeroDT:numeroDT.value,dataVencimento:dataVencimento.value,
-      cliente:cliente.value,tipoServico:tipoServico.value,status:status.value,
-      nota:n,pag:p,neg:ne
+      razao:razao.value,
+      nfCliente:nfCliente.value,
+      uf:uf.value,
+      valorNFS:valorNFS.value,
+      valorDT:valorDT.value,
+      tipoVeiculo:tipoVeiculo.value,
+      numeroDT:numeroDT.value,
+      dataVencimento:dataVencimento.value,
+      cliente:cliente.value,
+      tipoServico:tipoServico.value,
+      status:status.value,
+      nota:n,
+      pag:p,
+      neg:ne
     });
+
     localStorage.setItem('despesas',JSON.stringify(despesas));
-    alert('Despesa salva');
+    alert('Despesa salva com sucesso');
+    novaDespesa();
   });
+}
+
+function novaDespesa(){
+  const campos = document.querySelectorAll('#cadastro input, #cadastro select');
+  campos.forEach(c=>{
+    if(c.type === 'file') c.value = '';
+    else c.value = '';
+  });
+  razao.focus();
 }
 
 function editar(i){ editRow=i; render(); }
@@ -158,7 +281,13 @@ function render(){
 <td>${edit?cell(d.dataVencimento,i):d.dataVencimento||''}</td>
 <td>${edit?cell(d.cliente,i):d.cliente||''}</td>
 <td>${edit?cell(d.tipoServico,i):d.tipoServico||''}</td>
-<td>${edit?`<select data-row="${i}"><option ${d.status==='Pendente'?'selected':''}>Pendente</option><option ${d.status==='Aprovado'?'selected':''}>Aprovado</option></select>`:`<span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span>`}</td>
+<td>${edit?
+  `<select data-row="${i}">
+    <option ${d.status==='Pendente'?'selected':''}>Pendente</option>
+    <option ${d.status==='Aprovado'?'selected':''}>Aprovado</option>
+  </select>`:
+  `<span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span>`
+}</td>
 <td>${d.nota?`<a href="${d.nota}" target="_blank">Abrir</a>`:'-'}</td>
 <td>${d.pag?`<a href="${d.pag}" target="_blank">Abrir</a>`:'-'}</td>
 <td>${d.neg?`<a href="${d.neg}" target="_blank">Abrir</a>`:'-'}</td>
@@ -172,7 +301,49 @@ ${edit?
 </tr>`;
   });
 }
+
+function exportarExcel(){
+  const ws = XLSX.utils.json_to_sheet(despesas.map(d => ({
+    Razao: d.razao,
+    NF: d.nfCliente,
+    UF: d.uf,
+    Valor_NF: d.valorNFS,
+    Valor_DT: d.valorDT,
+    Veiculo: d.tipoVeiculo,
+    DT: d.numeroDT,
+    Vencimento: d.dataVencimento,
+    Cliente: d.cliente,
+    Servico: d.tipoServico,
+    Status: d.status
+  })));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Despesas");
+  XLSX.writeFile(wb, "despesas.xlsx");
+}
+
+function exportarPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("l","pt","a4");
+
+  const cols = ["Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
+  const rows = despesas.map(d => [
+    d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
+    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,d.status
+  ]);
+
+  doc.text("Relatório de Despesas",40,30);
+  doc.autoTable({
+    head:[cols],
+    body:rows,
+    startY:50,
+    styles:{fontSize:8}
+  });
+
+  doc.save("despesas.pdf");
+}
 </script>
+
 
 </body>
 </html>
