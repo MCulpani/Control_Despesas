@@ -18,27 +18,30 @@ header{background:#020617;padding:14px 20px;display:flex;justify-content:space-b
 header button{margin-left:6px;padding:8px 14px;border:none;border-radius:8px;background:#38bdf8;font-weight:bold;cursor:pointer}
 main{padding:20px}
 .card{background:#111827;border-radius:14px;padding:18px;margin-bottom:20px}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:16px
-}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
 
 .col-2{grid-column:span 2}
 .col-3{grid-column:span 3}
 
 label{font-size:12px;color:#9ca3af}
-input,select{width:100%;min-height:32px;padding:6px;border-radius:6px;border:1px solid #374151;background:#020617;color:#e5e7eb;font-size:12px}
-button.action{margin-top:16px;padding:12px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
+input,select,textarea{
+  width:100%;
+  min-height:32px;
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #374151;
+  background:#020617;
+  color:#e5e7eb;
+  font-size:12px
+}
+textarea{resize:none}
 
+button.action{margin-top:16px;padding:12px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
 table{width:100%;border-collapse:collapse;font-size:13px;text-align:center}
 th,td{padding:8px;border-bottom:1px solid #1f2933}
-
 .badge{padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold}
 .ok{background:#14532d;color:#22c55e}
 .pending{background:#422006;color:#facc15}
-
 a{color:#38bdf8;text-decoration:none}
 .btn-sm{padding:4px 8px;border:none;border-radius:6px;cursor:pointer;font-size:11px}
 .edit{background:#2563eb;color:#fff}
@@ -56,16 +59,14 @@ a{color:#38bdf8;text-decoration:none}
     <button onclick="mostrar('cadastro')">Nova</button>
     <button onclick="mostrar('despesas')">Despesas</button>
   </div>
+
+  <div></div>
 </header>
 
 <main>
 
-<!-- ===================== -->
-<!-- ABA NOVA (AJUSTADA) -->
-<!-- ===================== -->
 <section id="cadastro" class="card">
 <h3>Nova Despesa</h3>
-
 <div class="grid">
   <div><label>Razão Social Prestador</label><input id="razao"></div>
   <div><label>NF Cliente</label><input id="nfCliente"></div>
@@ -84,10 +85,7 @@ a{color:#38bdf8;text-decoration:none}
   <div><label>Número DT</label><input id="numeroDT"></div>
   <div><label>Data Vencimento</label><input type="date" id="dataVencimento"></div>
 
-  <div class="col-2">
-    <label>Cliente</label>
-    <input id="cliente">
-  </div>
+  <div class="col-2"><label>Cliente</label><input id="cliente"></div>
 
   <div class="col-2">
     <label>Tipo de Serviço</label>
@@ -102,21 +100,24 @@ a{color:#38bdf8;text-decoration:none}
     </select>
   </div>
 
-  <div><label>Embutimento?</label><select id="embutimento"><option>Sim</option><option>Não</option></select></div>
-  <div><label>Motivo?</label><select id="motivo"><option>Sim</option><option>Não</option></select></div>
-
-  <div class="col-2">
-    <label>Fato gerador</label>
-    <input id="fatoGerador">
+  <div><label>Embutimento?</label>
+    <select id="embutimento">
+      <option>Sim</option>
+      <option>Não</option>
+    </select>
   </div>
 
-  <div class="col-3">
-    <label>Observações</label>
-    <input id="observacoes">
+  <div><label>Motivo?</label>
+    <select id="motivo">
+      <option>Sim</option>
+      <option>Não</option>
+    </select>
   </div>
 
-  <div>
-    <label>Status</label>
+  <div class="col-2"><label>Fato gerador</label><input id="fatoGerador"></div>
+  <div class="col-3"><label>Observações</label><input id="observacoes"></div>
+
+  <div><label>Status</label>
     <select id="status">
       <option>Pendente</option>
       <option>Aprovado</option>
@@ -132,15 +133,204 @@ a{color:#38bdf8;text-decoration:none}
 <button class="action" style="background:#38bdf8;margin-left:10px" onclick="novaDespesa()">Nova Despesa</button>
 </section>
 
-<!-- ===================== -->
-<!-- ABA DESPESAS (INALTERADA) -->
-<!-- ===================== -->
 <section id="despesas" class="card" style="display:none">
 <h3>Despesas Cadastradas</h3>
-<!-- restante do código permanece igual -->
+<div style="margin-bottom:12px">
+<button onclick="exportarExcel()" style="margin-right:6px;padding:8px 14px;border:none;border-radius:8px;background:#22c55e;font-weight:bold;cursor:pointer">Exportar Excel</button>
+<button onclick="exportarPDF()" style="padding:8px 14px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-weight:bold;cursor:pointer">Exportar PDF</button>
+</div>
+<table>
+<thead>
+<tr>
+<th>Razão</th><th>NF</th><th>UF</th><th>Valor NF</th><th>Valor DT</th>
+<th>Veículo</th><th>DT</th><th>Venc.</th><th>Cliente</th><th>Serviço</th>
+<th>Embutimento?</th><th>Motivo?</th><th>Fato Gerador</th><th>Observações</th>
+<th>Status</th><th>Nota</th><th>Pagto</th><th>Negociação</th><th>Ações</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
 </section>
 
 </main>
+
+<script>
+let despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
+let editRow = null;
+
+const cadastro = document.getElementById('cadastro');
+const despesasSec = document.getElementById('despesas');
+
+function mostrar(id){
+  cadastro.style.display='none';
+  despesasSec.style.display='none';
+  document.getElementById(id).style.display='block';
+  if(id==='despesas') render();
+}
+
+function lerArquivo(file){
+  return new Promise(res=>{
+    if(!file) return res(null);
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.readAsDataURL(file);
+  });
+}
+
+function salvar(){
+  if(!nota.files[0]){
+    alert('Anexe a nota fiscal');
+    return;
+  }
+
+  Promise.all([
+    lerArquivo(nota.files[0]),
+    lerArquivo(compPag.files[0]),
+    lerArquivo(compNeg.files[0])
+  ]).then(([n,p,ne])=>{
+    despesas.push({
+      razao:razao.value,
+      nfCliente:nfCliente.value,
+      uf:uf.value,
+      valorNFS:valorNFS.value,
+      valorDT:valorDT.value,
+      tipoVeiculo:tipoVeiculo.value,
+      numeroDT:numeroDT.value,
+      dataVencimento:dataVencimento.value,
+      cliente:cliente.value,
+      tipoServico:tipoServico.value,
+      embutimento:embutimento.value,
+      motivo:motivo.value,
+      fatoGerador:fatoGerador.value,
+      observacoes:observacoes.value,
+      status:status.value,
+      nota:n,
+      pag:p,
+      neg:ne
+    });
+
+    localStorage.setItem('despesas',JSON.stringify(despesas));
+    alert('Despesa salva com sucesso');
+    novaDespesa();
+  });
+}
+
+function novaDespesa(){
+  const campos = document.querySelectorAll('#cadastro input, #cadastro select');
+  campos.forEach(c=>{
+    if(c.type === 'file') c.value = '';
+    else c.value = '';
+  });
+  razao.focus();
+}
+
+function editar(i){ editRow=i; render(); }
+function cancelar(){ editRow=null; render(); }
+
+function salvarLinha(i){
+  const row = document.querySelectorAll('[data-row="'+i+'"]');
+  const keys = ['razao','nfCliente','uf','valorNFS','valorDT','tipoVeiculo','numeroDT','dataVencimento','cliente','tipoServico','embutimento','motivo','fatoGerador','observacoes','status'];
+  keys.forEach((k,idx)=>despesas[i][k]=row[idx].value);
+  localStorage.setItem('despesas',JSON.stringify(despesas));
+  editRow=null; render();
+}
+
+function excluir(i){
+  if(confirm('Deseja excluir esta despesa?')){
+    despesas.splice(i,1);
+    localStorage.setItem('despesas',JSON.stringify(despesas));
+    render();
+  }
+}
+
+function cell(v,i){return `<input data-row="${i}" value="${v||''}">`}
+
+function render(){
+  tbody.innerHTML='';
+  despesas.forEach((d,i)=>{
+    const edit = editRow===i;
+    tbody.innerHTML+=`<tr>
+<td>${edit?cell(d.razao,i):d.razao||''}</td>
+<td>${edit?cell(d.nfCliente,i):d.nfCliente||''}</td>
+<td>${edit?cell(d.uf,i):d.uf||''}</td>
+<td>${edit?cell(d.valorNFS,i):d.valorNFS||''}</td>
+<td>${edit?cell(d.valorDT,i):d.valorDT||''}</td>
+<td>${edit?cell(d.tipoVeiculo,i):d.tipoVeiculo||''}</td>
+<td>${edit?cell(d.numeroDT,i):d.numeroDT||''}</td>
+<td>${edit?cell(d.dataVencimento,i):d.dataVencimento||''}</td>
+<td>${edit?cell(d.cliente,i):d.cliente||''}</td>
+<td>${edit?cell(d.tipoServico,i):d.tipoServico||''}</td>
+<td>${edit?cell(d.embutimento,i):d.embutimento||''}</td>
+<td>${edit?cell(d.motivo,i):d.motivo||''}</td>
+<td>${edit?cell(d.fatoGerador,i):d.fatoGerador||''}</td>
+<td>${edit?cell(d.observacoes,i):d.observacoes||''}</td>
+<td>${edit?
+  `<select data-row="${i}">
+    <option ${d.status==='Pendente'?'selected':''}>Pendente</option>
+    <option ${d.status==='Aprovado'?'selected':''}>Aprovado</option>
+  </select>`:
+  `<span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span>`
+}</td>
+<td>${d.nota?`<a href="${d.nota}" target="_blank">Abrir</a>`:'-'}</td>
+<td>${d.pag?`<a href="${d.pag}" target="_blank">Abrir</a>`:'-'}</td>
+<td>${d.neg?`<a href="${d.neg}" target="_blank">Abrir</a>`:'-'}</td>
+<td>
+${edit?
+`<button class="btn-sm save" onclick="salvarLinha(${i})">Salvar</button>
+ <button class="btn-sm cancel" onclick="cancelar()">Cancelar</button>`:
+`<button class="btn-sm edit" onclick="editar(${i})">Editar</button>
+ <button class="btn-sm del" onclick="excluir(${i})">Excluir</button>`}
+</td>
+</tr>`;
+  });
+}
+
+function exportarExcel(){
+  const ws = XLSX.utils.json_to_sheet(despesas.map(d => ({
+    Razao: d.razao,
+    NF: d.nfCliente,
+    UF: d.uf,
+    Valor_NF: d.valorNFS,
+    Valor_DT: d.valorDT,
+    Veiculo: d.tipoVeiculo,
+    DT: d.numeroDT,
+    Vencimento: d.dataVencimento,
+    Cliente: d.cliente,
+    Servico: d.tipoServico,
+    Embutimento: d.embutimento,
+    Motivo: d.motivo,
+    Fato_Gerador: d.fatoGerador,
+    Observacoes: d.observacoes,
+    Status: d.status
+  })));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Despesas");
+  XLSX.writeFile(wb, "despesas.xlsx");
+}
+
+function exportarPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("l","pt","a4");
+
+  const cols = ["Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
+  const rows = despesas.map(d => [
+    d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
+    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,
+    d.embutimento,d.motivo,d.fatoGerador,d.observacoes,d.status
+  ]);
+
+  doc.text("Relatório de Despesas",40,30);
+  doc.autoTable({
+    head:[cols],
+    body:rows,
+    startY:50,
+    styles:{fontSize:8}
+  });
+
+  doc.save("despesas.pdf");
+}
+</script>
 
 </body>
 </html>
