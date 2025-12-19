@@ -24,6 +24,9 @@ th,td{padding:10px;border-bottom:1px solid #1f2933}
 .ok{background:#14532d;color:#22c55e}
 .pending{background:#422006;color:#facc15}
 a{color:#38bdf8;text-decoration:none}
+.btn-sm{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;font-size:12px}
+.edit{background:#2563eb;color:#fff}
+.del{background:#dc2626;color:#fff}
 </style>
 </head>
 <body>
@@ -70,7 +73,7 @@ a{color:#38bdf8;text-decoration:none}
 <tr>
 <th>Razão</th><th>NF</th><th>UF</th><th>Valor NF</th><th>Valor DT</th>
 <th>Veículo</th><th>DT</th><th>Venc.</th><th>Cliente</th><th>Serviço</th>
-<th>Status</th><th>Nota</th><th>Pagto</th><th>Negociação</th>
+<th>Status</th><th>Nota</th><th>Pagto</th><th>Negociação</th><th>Ações</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
@@ -126,9 +129,21 @@ function salvar(){
   });
 }
 
+function excluir(i){
+  if(confirm('Deseja excluir esta despesa?')){
+    despesas.splice(i,1);
+    localStorage.setItem('despesas',JSON.stringify(despesas));
+    render();
+  }
+}
+
+function editar(i){
+  alert('Edição simples: exclua e recadastre se necessário.');
+}
+
 function render(){
   tbody.innerHTML='';
-  despesas.forEach(d=>{
+  despesas.forEach((d,i)=>{
     tbody.innerHTML+=`<tr>
       <td>${d.razao||''}</td><td>${d.nfCliente||''}</td><td>${d.uf||''}</td>
       <td>${d.valorNFS||''}</td><td>${d.valorDT||''}</td><td>${d.tipoVeiculo||''}</td>
@@ -138,6 +153,10 @@ function render(){
       <td>${d.nota?`<a href="${d.nota}" target="_blank">Abrir</a>`:'-'}</td>
       <td>${d.pag?`<a href="${d.pag}" target="_blank">Abrir</a>`:'-'}</td>
       <td>${d.neg?`<a href="${d.neg}" target="_blank">Abrir</a>`:'-'}</td>
+      <td>
+        <button class="btn-sm edit" onclick="editar(${i})">Editar</button>
+        <button class="btn-sm del" onclick="excluir(${i})">Excluir</button>
+      </td>
     </tr>`;
   });
 }
