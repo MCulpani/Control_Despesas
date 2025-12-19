@@ -16,17 +16,19 @@ main{padding:20px}
 .card{background:#111827;border-radius:14px;padding:18px;margin-bottom:20px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
 label{font-size:12px;color:#9ca3af}
-input,select{width:100%;min-height:42px;padding:10px;border-radius:8px;border:1px solid #374151;background:#020617;color:#e5e7eb}
+input,select{width:100%;min-height:32px;padding:6px;border-radius:6px;border:1px solid #374151;background:#020617;color:#e5e7eb;font-size:12px}
 button.action{margin-top:16px;padding:12px;border:none;border-radius:10px;background:#22c55e;font-weight:bold;cursor:pointer}
 table{width:100%;border-collapse:collapse;font-size:13px;text-align:center}
-th,td{padding:10px;border-bottom:1px solid #1f2933}
+th,td{padding:8px;border-bottom:1px solid #1f2933}
 .badge{padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold}
 .ok{background:#14532d;color:#22c55e}
 .pending{background:#422006;color:#facc15}
 a{color:#38bdf8;text-decoration:none}
-.btn-sm{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;font-size:12px}
+.btn-sm{padding:4px 8px;border:none;border-radius:6px;cursor:pointer;font-size:11px}
 .edit{background:#2563eb;color:#fff}
 .del{background:#dc2626;color:#fff}
+.save{background:#16a34a;color:#fff}
+.cancel{background:#6b7280;color:#fff}
 </style>
 </head>
 <body>
@@ -84,13 +86,15 @@ a{color:#38bdf8;text-decoration:none}
 
 <script>
 let despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
+let editRow = null;
 
 function mostrar(id){
-  document.getElementById('cadastro').style.display='none';
-  document.getElementById('despesas').style.display='none';
+  cadastro.style.display='none';
+  despesasSec.style.display='none';
   document.getElementById(id).style.display='block';
   if(id==='despesas') render();
 }
+const despesasSec = document.getElementById('despesas');
 
 function lerArquivo(file){
   return new Promise(res=>{
@@ -102,31 +106,31 @@ function lerArquivo(file){
 }
 
 function salvar(){
-  const fNota = document.getElementById('nota').files[0];
+  const fNota = nota.files[0];
   if(!fNota){alert('Anexe a nota fiscal');return;}
-
-  Promise.all([
-    lerArquivo(fNota),
-    lerArquivo(document.getElementById('compPag').files[0]),
-    lerArquivo(document.getElementById('compNeg').files[0])
-  ]).then(([nota,pag,neg])=>{
+  Promise.all([lerArquivo(fNota),lerArquivo(compPag.files[0]),lerArquivo(compNeg.files[0])])
+  .then(([n,p,ne])=>{
     despesas.push({
-      razao:razao.value,
-      nfCliente:nfCliente.value,
-      uf:uf.value,
-      valorNFS:valorNFS.value,
-      valorDT:valorDT.value,
-      tipoVeiculo:tipoVeiculo.value,
-      numeroDT:numeroDT.value,
-      dataVencimento:dataVencimento.value,
-      cliente:cliente.value,
-      tipoServico:tipoServico.value,
-      status:status.value,
-      nota, pag, neg
+      razao:razao.value,nfCliente:nfCliente.value,uf:uf.value,
+      valorNFS:valorNFS.value,valorDT:valorDT.value,tipoVeiculo:tipoVeiculo.value,
+      numeroDT:numeroDT.value,dataVencimento:dataVencimento.value,
+      cliente:cliente.value,tipoServico:tipoServico.value,status:status.value,
+      nota:n,pag:p,neg:ne
     });
     localStorage.setItem('despesas',JSON.stringify(despesas));
     alert('Despesa salva');
   });
+}
+
+function editar(i){ editRow=i; render(); }
+function cancelar(){ editRow=null; render(); }
+
+function salvarLinha(i){
+  const row = document.querySelectorAll('[data-row="'+i+'"]');
+  const keys = ['razao','nfCliente','uf','valorNFS','valorDT','tipoVeiculo','numeroDT','dataVencimento','cliente','tipoServico','status'];
+  keys.forEach((k,idx)=>despesas[i][k]=row[idx].value);
+  localStorage.setItem('despesas',JSON.stringify(despesas));
+  editRow=null; render();
 }
 
 function excluir(i){
@@ -137,27 +141,35 @@ function excluir(i){
   }
 }
 
-function editar(i){
-  alert('Edição simples: exclua e recadastre se necessário.');
-}
+function cell(v,i){return `<input data-row="${i}" value="${v||''}">`}
 
 function render(){
   tbody.innerHTML='';
   despesas.forEach((d,i)=>{
+    const edit = editRow===i;
     tbody.innerHTML+=`<tr>
-      <td>${d.razao||''}</td><td>${d.nfCliente||''}</td><td>${d.uf||''}</td>
-      <td>${d.valorNFS||''}</td><td>${d.valorDT||''}</td><td>${d.tipoVeiculo||''}</td>
-      <td>${d.numeroDT||''}</td><td>${d.dataVencimento||''}</td><td>${d.cliente||''}</td>
-      <td>${d.tipoServico||''}</td>
-      <td><span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span></td>
-      <td>${d.nota?`<a href="${d.nota}" target="_blank">Abrir</a>`:'-'}</td>
-      <td>${d.pag?`<a href="${d.pag}" target="_blank">Abrir</a>`:'-'}</td>
-      <td>${d.neg?`<a href="${d.neg}" target="_blank">Abrir</a>`:'-'}</td>
-      <td>
-        <button class="btn-sm edit" onclick="editar(${i})">Editar</button>
-        <button class="btn-sm del" onclick="excluir(${i})">Excluir</button>
-      </td>
-    </tr>`;
+<td>${edit?cell(d.razao,i):d.razao||''}</td>
+<td>${edit?cell(d.nfCliente,i):d.nfCliente||''}</td>
+<td>${edit?cell(d.uf,i):d.uf||''}</td>
+<td>${edit?cell(d.valorNFS,i):d.valorNFS||''}</td>
+<td>${edit?cell(d.valorDT,i):d.valorDT||''}</td>
+<td>${edit?cell(d.tipoVeiculo,i):d.tipoVeiculo||''}</td>
+<td>${edit?cell(d.numeroDT,i):d.numeroDT||''}</td>
+<td>${edit?cell(d.dataVencimento,i):d.dataVencimento||''}</td>
+<td>${edit?cell(d.cliente,i):d.cliente||''}</td>
+<td>${edit?cell(d.tipoServico,i):d.tipoServico||''}</td>
+<td>${edit?`<select data-row="${i}"><option ${d.status==='Pendente'?'selected':''}>Pendente</option><option ${d.status==='Aprovado'?'selected':''}>Aprovado</option></select>`:`<span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span>`}</td>
+<td>${d.nota?`<a href="${d.nota}" target="_blank">Abrir</a>`:'-'}</td>
+<td>${d.pag?`<a href="${d.pag}" target="_blank">Abrir</a>`:'-'}</td>
+<td>${d.neg?`<a href="${d.neg}" target="_blank">Abrir</a>`:'-'}</td>
+<td>
+${edit?
+`<button class="btn-sm save" onclick="salvarLinha(${i})">Salvar</button>
+ <button class="btn-sm cancel" onclick="cancelar()">Cancelar</button>`:
+`<button class="btn-sm edit" onclick="editar(${i})">Editar</button>
+ <button class="btn-sm del" onclick="excluir(${i})">Excluir</button>`}
+</td>
+</tr>`;
   });
 }
 </script>
