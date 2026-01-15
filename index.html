@@ -68,6 +68,19 @@ a{color:#38bdf8;text-decoration:none}
 <section id="cadastro" class="card">
 <h3>Nova Despesa</h3>
 <div class="grid">
+  
+<div>
+<label>Filial</label>
+<select id="filial">
+<option value="">Selecione</option>
+<option>JOI</option>
+<option>EAA</option>
+<option>RCO</option>
+<option>SMF</option>
+<option>CLM</option>
+</select>
+</div>
+
   <div><label>Razão Social Prestador</label><input id="razao"></div>
   <div><label>NF Cliente</label><input id="nfCliente"></div>
   <div><label>UF</label><input id="uf"></div>
@@ -142,7 +155,7 @@ a{color:#38bdf8;text-decoration:none}
 <table>
 <thead>
 <tr>
-<th>Razão</th><th>NF</th><th>UF</th><th>Valor NF</th><th>Valor DT</th>
+<th>Filial</th><th>thRazão</th><th>NF</th><th>UF</th><th>Valor NF</th><th>Valor DT</th>
 <th>Veículo</th><th>DT</th><th>Venc.</th><th>Cliente</th><th>Serviço</th>
 <th>Embutimento?</th><th>Motivo?</th><th>Fato Gerador</th><th>Observações</th>
 <th>Status</th><th>Nota</th><th>Pagto</th><th>Negociação</th><th>Ações</th>
@@ -189,6 +202,7 @@ function salvar(){
     lerArquivo(compNeg.files[0])
   ]).then(([n,p,ne])=>{
     despesas.push({
+      filial:filial.value,
       razao:razao.value,
       nfCliente:nfCliente.value,
       uf:uf.value,
@@ -229,7 +243,7 @@ function cancelar(){ editRow=null; render(); }
 
 function salvarLinha(i){
   const row = document.querySelectorAll('[data-row="'+i+'"]');
-  const keys = ['razao','nfCliente','uf','valorNFS','valorDT','tipoVeiculo','numeroDT','dataVencimento','cliente','tipoServico','embutimento','motivo','fatoGerador','observacoes','status'];
+  const keys = ['filial','razao','nfCliente','uf','valorNFS','valorDT','tipoVeiculo','numeroDT','dataVencimento','cliente','tipoServico','embutimento','motivo','fatoGerador','observacoes','status'];
   keys.forEach((k,idx)=>despesas[i][k]=row[idx].value);
   localStorage.setItem('despesas',JSON.stringify(despesas));
   editRow=null; render();
@@ -250,6 +264,7 @@ function render(){
   despesas.forEach((d,i)=>{
     const edit = editRow===i;
     tbody.innerHTML+=`<tr>
+<td>${edit?cell(d.filial,i):d.filial||''}</td>    
 <td>${edit?cell(d.razao,i):d.razao||''}</td>
 <td>${edit?cell(d.nfCliente,i):d.nfCliente||''}</td>
 <td>${edit?cell(d.uf,i):d.uf||''}</td>
@@ -287,6 +302,7 @@ ${edit?
 
 function exportarExcel(){
   const ws = XLSX.utils.json_to_sheet(despesas.map(d => ({
+    Filial: d.filial,
     Razao: d.razao,
     NF: d.nfCliente,
     UF: d.uf,
@@ -313,9 +329,9 @@ function exportarPDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("l","pt","a4");
 
-  const cols = ["Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
+  const cols = ["Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
   const rows = despesas.map(d => [
-    d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
+    d.filial,d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
     d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,
     d.embutimento,d.motivo,d.fatoGerador,d.observacoes,d.status
   ]);
