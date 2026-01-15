@@ -5,76 +5,30 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Gestão de Despesas Operacionais</title>
 
-<!-- Exportação Excel -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
-function gerarCamposNF(){
-  const qtd = parseInt(qtdNF.value || 0);
-  listaNF.innerHTML = '';
-  for(let i=1;i<=qtd;i++){
-    listaNF.innerHTML += `
-      <div style="margin-bottom:6px">
-        <label>NF ${i}</label>
-        <input class="nf-item">
-      </div>`;
-  }
-}
-
-</script>
-
-<!-- Exportação PDF -->
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js">
-function gerarCamposNF(){
-  const qtd = parseInt(qtdNF.value || 0);
-  listaNF.innerHTML = '';
-  for(let i=1;i<=qtd;i++){
-    listaNF.innerHTML += `
-      <div style="margin-bottom:6px">
-        <label>NF ${i}</label>
-        <input class="nf-item">
-      </div>`;
-  }
-}
-
-</script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.29/dist/jspdf.plugin.autotable.min.js">
-function gerarCamposNF(){
-  const qtd = parseInt(qtdNF.value || 0);
-  listaNF.innerHTML = '';
-  for(let i=1;i<=qtd;i++){
-    listaNF.innerHTML += `
-      <div style="margin-bottom:6px">
-        <label>NF ${i}</label>
-        <input class="nf-item">
-      </div>`;
-  }
-}
-
-</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#e5e7eb}
+/* ===== LOGIN ORIGINAL ===== */
+body { font-family: 'Inter', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+#login-area { max-width: 400px; margin: 6vh auto; padding: 50px 30px; background: #ffffff; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.12); text-align: center; }
+#login-area h2 { margin-bottom: 32px; font-weight: 600; color: #0f172a; font-size: 26px; }
+.input-wrapper { position: relative; margin-bottom: 20px; }
+.input-wrapper input { width: 100%; padding: 14px 45px 14px 16px; font-size: 15px; border: 1px solid #cbd5e1; border-radius: 12px; background: #f8fafc; color: #0f172a; }
+.input-wrapper i { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); cursor: pointer; }
+button.app-btn { padding: 10px 16px; border: 0; border-radius: 8px; background: #0ea5a4; color: white; cursor: pointer; font-weight: 600; }
+
+/* ===== SISTEMA DE DESPESAS ORIGINAL ===== */
+body.app{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#e5e7eb}
 header{background:#020617;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
 header button{margin-left:6px;padding:8px 14px;border:none;border-radius:8px;background:#38bdf8;font-weight:bold;cursor:pointer}
 main{padding:20px}
 .card{background:#111827;border-radius:14px;padding:18px;margin-bottom:20px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-
 .col-2{grid-column:span 2}
 .col-3{grid-column:span 3}
-
 label{font-size:12px;color:#9ca3af}
-input,select,textarea{
-  width:100%;
-  min-height:32px;
-  padding:6px;
-  border-radius:6px;
-  border:1px solid #374151;
-  background:#020617;
-  color:#e5e7eb;
-  font-size:12px
-}
+input,select,textarea{width:100%;min-height:32px;padding:6px;border-radius:6px;border:1px solid #374151;background:#020617;color:#e5e7eb;font-size:12px}
 textarea{resize:none}
-
 button.action{margin-top:16px;padding:12px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
 table{width:100%;border-collapse:collapse;font-size:13px;text-align:center}
 th,td{padding:8px;border-bottom:1px solid #1f2933}
@@ -88,17 +42,85 @@ a{color:#38bdf8;text-decoration:none}
 .save{background:#16a34a;color:#fff}
 .cancel{background:#6b7280;color:#fff}
 </style>
+
+<!-- Libs originais -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.29/dist/jspdf.plugin.autotable.min.js"></script>
+
+<!-- Firebase Login -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyC_FD33WikHRUVCd2JtH_ok3WF1YtfAFhU",
+  authDomain: "conversor-de-avisos.firebaseapp.com",
+  projectId: "conversor-de-avisos",
+  storageBucket: "conversor-de-avisos.firebasestorage.app",
+  messagingSenderId: "1099286231450",
+  appId: "1:1099286231450:web:94e0b02dec2ef6b0d26223"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.addEventListener("DOMContentLoaded",()=>{
+  const loginBox = document.getElementById("login-area");
+  const appBox = document.getElementById("app-area");
+  const msgLogin = document.getElementById("login-msg");
+  const emailInput = document.getElementById("email");
+  const passInput  = document.getElementById("password");
+  const btnLogin   = document.getElementById("btnLogin");
+  const btnLogout  = document.getElementById("btnLogout");
+
+  btnLogin.addEventListener("click", async () => {
+    try {
+      await signInWithEmailAndPassword(auth, emailInput.value.trim(), passInput.value);
+      msgLogin.textContent = "";
+    } catch (err) {
+      msgLogin.textContent = "Erro: " + err.message;
+    }
+  });
+
+  btnLogout.addEventListener("click", async () => { await signOut(auth); });
+  document.getElementById("togglePassword").addEventListener("click", () => {
+    passInput.type = passInput.type === "password" ? "text" : "password";
+  });
+
+  onAuthStateChanged(auth, (user) => {
+    loginBox.style.display = user ? "none" : "block";
+    appBox.style.display = user ? "block" : "none";
+    if(user) document.body.className="app";
+  });
+});
+</script>
 </head>
 
 <body>
 
+<!-- LOGIN -->
+<div id="login-area">
+  <h2>Entrar na Plataforma</h2>
+  <div class="input-wrapper">
+    <input id="email" type="email" placeholder="Email" />
+    <i>👤</i>
+  </div>
+  <div class="input-wrapper">
+    <input id="password" type="password" placeholder="Senha" />
+    <i id="togglePassword">👁️</i>
+  </div>
+  <button id="btnLogin" class="app-btn" style="width:100%;">Entrar</button>
+  <p id="login-msg"></p>
+</div>
+
+<!-- SISTEMA -->
+<div id="app-area" style="display:none;">
 <header>
   <h3>📊 Gestão de Despesas</h3>
   <div>
     <button onclick="mostrar('cadastro')">Nova</button>
     <button onclick="mostrar('despesas')">Despesas</button>
+    <button id="btnLogout">Sair</button>
   </div>
-
   <div></div>
 </header>
 
@@ -107,7 +129,6 @@ a{color:#38bdf8;text-decoration:none}
 <section id="cadastro" class="card">
 <h3>Nova Despesa</h3>
 <div class="grid">
-  
 <div>
 <label>Filial</label>
 <select id="filial">
@@ -119,78 +140,63 @@ a{color:#38bdf8;text-decoration:none}
 <option>CLM</option>
 </select>
 </div>
-
-  
-  <div><label>Razão Social Prestador</label><input id="razao"></div>
-
-  <div>
-    <label>Quantidade de NF</label>
-    <input type="number" id="qtdNF" min="1" oninput="gerarCamposNF()">
-  </div>
-
-  <div id="listaNF" class="col-2"></div>
-
-  <div><label>NF Cliente</label><input id="nfCliente" style="display:none"></div>
-
-  <div><label>UF</label><input id="uf"></div>
-  <div><label>Valor da NF-s</label><input type="number" id="valorNFS"></div>
-
-  <div><label>Valor por DT</label><input type="number" id="valorDT"></div>
-  <div><label>Tipo de veículo</label>
-    <select id="tipoVeiculo">
-      <option>Truck</option>
-      <option>Carreta</option>
-      <option>Bitrem</option>
-      <option>N/A</option>
-    </select>
-  </div>
-  <div><label>Número DT</label><input id="numeroDT"></div>
-  <div><label>Data Vencimento</label><input type="date" id="dataVencimento"></div>
-
-  <div class="col-2"><label>Cliente</label><input id="cliente"></div>
-
-  <div class="col-2">
-    <label>Tipo de Serviço</label>
-    <select id="tipoServico">
-      <option>Taxa de Desembarque</option>
-      <option>Taxa de Embarque</option>
-      <option>Armazenagem</option>
-      <option>Travessia de Balsa</option>
-      <option>Descarga Manual</option>
-      <option>Redespacho</option>
-      <option>Descarga Maquinário</option>
-    </select>
-  </div>
-
-  <div><label>Embutimento?</label>
-    <select id="embutimento">
-      <option>Sim</option>
-      <option>Não</option>
-    </select>
-  </div>
-
-  <div><label>Motivo?</label>
-    <select id="motivo">
-      <option>Sim</option>
-      <option>Não</option>
-    </select>
-  </div>
-
-  <div class="col-2"><label>Fato gerador</label><input id="fatoGerador"></div>
-  <div class="col-3"><label>Observações</label><input id="observacoes"></div>
-
-  <div><label>Status</label>
-    <select id="status">
-      <option>Pendente</option>
-      <option>Aprovado</option>
-    </select>
-  </div>
-
-  <div><label>Nota Fiscal</label><input type="file" id="nota"></div>
-  <div><label>Comprovante Pagamento</label><input type="file" id="compPag"></div>
-  <div><label>Comprovante Negociação</label><input type="file" id="compNeg"></div>
+<div><label>Razão Social Prestador</label><input id="razao"></div>
+<div>
+<label>Quantidade de NF</label>
+<input type="number" id="qtdNF" min="1" oninput="gerarCamposNF()">
 </div>
-
+<div id="listaNF" class="col-2"></div>
+<div><label>NF Cliente</label><input id="nfCliente" style="display:none"></div>
+<div><label>UF</label><input id="uf"></div>
+<div><label>Valor da NF-s</label><input type="number" id="valorNFS"></div>
+<div><label>Valor por DT</label><input type="number" id="valorDT"></div>
+<div><label>Tipo de veículo</label>
+<select id="tipoVeiculo">
+<option>Truck</option>
+<option>Carreta</option>
+<option>Bitrem</option>
+<option>N/A</option>
+</select>
+</div>
+<div><label>Número DT</label><input id="numeroDT"></div>
+<div><label>Data Vencimento</label><input type="date" id="dataVencimento"></div>
+<div class="col-2"><label>Cliente</label><input id="cliente"></div>
+<div class="col-2">
+<label>Tipo de Serviço</label>
+<select id="tipoServico">
+<option>Taxa de Desembarque</option>
+<option>Taxa de Embarque</option>
+<option>Armazenagem</option>
+<option>Travessia de Balsa</option>
+<option>Descarga Manual</option>
+<option>Redespacho</option>
+<option>Descarga Maquinário</option>
+</select>
+</div>
+<div><label>Embutimento?</label>
+<select id="embutimento">
+<option>Sim</option>
+<option>Não</option>
+</select>
+</div>
+<div><label>Motivo?</label>
+<select id="motivo">
+<option>Sim</option>
+<option>Não</option>
+</select>
+</div>
+<div class="col-2"><label>Fato gerador</label><input id="fatoGerador"></div>
+<div class="col-3"><label>Observações</label><input id="observacoes"></div>
+<div><label>Status</label>
+<select id="status">
+<option>Pendente</option>
+<option>Aprovado</option>
+</select>
+</div>
+<div><label>Nota Fiscal</label><input type="file" id="nota"></div>
+<div><label>Comprovante Pagamento</label><input type="file" id="compPag"></div>
+<div><label>Comprovante Negociação</label><input type="file" id="compNeg"></div>
+</div>
 <button class="action" style="background:#22c55e" onclick="salvar()">Salvar Despesa</button>
 <button class="action" style="background:#38bdf8;margin-left:10px" onclick="novaDespesa()">Nova Despesa</button>
 </section>
@@ -215,11 +221,11 @@ a{color:#38bdf8;text-decoration:none}
 </section>
 
 </main>
+</div>
 
 <script>
 let despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
 let editRow = null;
-
 const cadastro = document.getElementById('cadastro');
 const despesasSec = document.getElementById('despesas');
 
@@ -240,49 +246,24 @@ function lerArquivo(file){
 }
 
 function salvar(){
-  if(!nota.files[0]){
-    alert('Anexe a nota fiscal');
-    return;
-  }
-
+  if(!nota.files[0]){ alert('Anexe a nota fiscal'); return; }
   const nfs = document.querySelectorAll('.nf-item');
-  if(nfs.length === 0){
-    alert('Informe a quantidade e os números das NFs');
-    return;
-  }
-
+  if(nfs.length === 0){ alert('Informe a quantidade e os números das NFs'); return; }
   const valorTotal = parseFloat(valorNFS.value || 0);
   const valorRateado = (valorTotal / nfs.length).toFixed(2);
 
-  Promise.all([
-    lerArquivo(nota.files[0]),
-    lerArquivo(compPag.files[0]),
-    lerArquivo(compNeg.files[0])
-  ]).then(([n,p,ne])=>{
+  Promise.all([ lerArquivo(nota.files[0]), lerArquivo(compPag.files[0]), lerArquivo(compNeg.files[0]) ])
+  .then(([n,p,ne])=>{
     nfs.forEach(inputNF=>{
       despesas.push({
-        filial:filial.value,
-        razao:razao.value,
-        nfCliente:inputNF.value,
-        uf:uf.value,
-        valorNFS:valorRateado,
-        valorDT:valorDT.value,
-        tipoVeiculo:tipoVeiculo.value,
-        numeroDT:numeroDT.value,
-        dataVencimento:dataVencimento.value,
-        cliente:cliente.value,
-        tipoServico:tipoServico.value,
-        embutimento:embutimento.value,
-        motivo:motivo.value,
-        fatoGerador:fatoGerador.value,
-        observacoes:observacoes.value,
-        status:status.value,
-        nota:n,
-        pag:p,
-        neg:ne
+        filial:filial.value, razao:razao.value, nfCliente:inputNF.value, uf:uf.value,
+        valorNFS:valorRateado, valorDT:valorDT.value, tipoVeiculo:tipoVeiculo.value,
+        numeroDT:numeroDT.value, dataVencimento:dataVencimento.value, cliente:cliente.value,
+        tipoServico:tipoServico.value, embutimento:embutimento.value, motivo:motivo.value,
+        fatoGerador:fatoGerador.value, observacoes:observacoes.value, status:status.value,
+        nota:n, pag:p, neg:ne
       });
     });
-
     localStorage.setItem('despesas',JSON.stringify(despesas));
     alert('Despesa salva com sucesso (rateada)');
     novaDespesa();
@@ -291,10 +272,7 @@ function salvar(){
 
 function novaDespesa(){
   const campos = document.querySelectorAll('#cadastro input, #cadastro select');
-  campos.forEach(c=>{
-    if(c.type === 'file') c.value = '';
-    else c.value = '';
-  });
+  campos.forEach(c=>{ if(c.type === 'file') c.value = ''; else c.value = ''; });
   razao.focus();
 }
 
@@ -362,24 +340,11 @@ ${edit?
 
 function exportarExcel(){
   const ws = XLSX.utils.json_to_sheet(despesas.map(d => ({
-    Filial: d.filial,
-    Razao: d.razao,
-    NF: d.nfCliente,
-    UF: d.uf,
-    Valor_NF: d.valorNFS,
-    Valor_DT: d.valorDT,
-    Veiculo: d.tipoVeiculo,
-    DT: d.numeroDT,
-    Vencimento: d.dataVencimento,
-    Cliente: d.cliente,
-    Servico: d.tipoServico,
-    Embutimento: d.embutimento,
-    Motivo: d.motivo,
-    Fato_Gerador: d.fatoGerador,
-    Observacoes: d.observacoes,
-    Status: d.status
+    Filial: d.filial, Razao: d.razao, NF: d.nfCliente, UF: d.uf, Valor_NF: d.valorNFS,
+    Valor_DT: d.valorDT, Veiculo: d.tipoVeiculo, DT: d.numeroDT, Vencimento: d.dataVencimento,
+    Cliente: d.cliente, Servico: d.tipoServico, Embutimento: d.embutimento, Motivo: d.motivo,
+    Fato_Gerador: d.fatoGerador, Observacoes: d.observacoes, Status: d.status
   })));
-
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Despesas");
   XLSX.writeFile(wb, "despesas.xlsx");
@@ -388,22 +353,13 @@ function exportarExcel(){
 function exportarPDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("l","pt","a4");
-
   const cols = ["Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
   const rows = despesas.map(d => [
     d.filial,d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
-    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,
-    d.embutimento,d.motivo,d.fatoGerador,d.observacoes,d.status
+    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,d.status
   ]);
-
   doc.text("Relatório de Despesas",40,30);
-  doc.autoTable({
-    head:[cols],
-    body:rows,
-    startY:50,
-    styles:{fontSize:8}
-  });
-
+  doc.autoTable({ head:[cols], body:rows, startY:50, styles:{fontSize:8} });
   doc.save("despesas.pdf");
 }
 
@@ -418,8 +374,6 @@ function gerarCamposNF(){
       </div>`;
   }
 }
-
 </script>
-
 </body>
 </html>
