@@ -169,8 +169,8 @@ window.addEventListener("DOMContentLoaded",()=>{
 </div>
 <div id="listaNF" class="col-2"></div>
 <div><label>UF</label><input id="uf"></div>
-<div><label>Valor da NF-s</label><input type="number" id="valorNFS"></div>
-<div><label>Valor por DT</label><input type="number" id="valorDT"></div>
+<div><label>Valor da NF-s</label><input id="valorNFS" oninput="formatarMoeda(this)"></div>
+<div><label>Valor por DT</label><input id="valorDT" oninput="formatarMoeda(this)"></div>
 <div><label>Tipo de veículo</label>
 <select id="tipoVeiculo">
 <option>Truck</option>
@@ -280,7 +280,12 @@ function salvar(){
   if(!nota.files[0]){ alert('Anexe a nota fiscal'); return; }
   const nfs = document.querySelectorAll('.nf-item');
   if(nfs.length === 0){ alert('Informe a quantidade e os números das NFs'); return; }
-  const valorTotal = parseFloat(valorNFS.value || 0);
+  const valorTotal = parseFloat(
+  valorNFS.value.replace(/\./g,'').replace(',','.') || 0
+);
+  const valorDTnum = parseFloat(
+  valorDT.value.replace(/\./g,'').replace(',','.') || 0
+);
   const valorRateado = (valorTotal / nfs.length).toFixed(2);
   const statusSelecionado = document.getElementById('status').value;
 
@@ -289,7 +294,7 @@ function salvar(){
     nfs.forEach(inputNF=>{
       despesas.push({
         filial:filial.value, razao:razao.value, nfCliente:inputNF.value, uf:uf.value,
-        valorNFS:valorRateado, valorDT:valorDT.value, tipoVeiculo:tipoVeiculo.value,
+        valorNFS:valorRateado, valorDT:valorDTnum.toFixed(2), tipoVeiculo:tipoVeiculo.value,
         numeroDT:numeroDT.value, dataVencimento:dataVencimento.value, cliente:cliente.value,
         tipoServico:tipoServico.value, embutimento:embutimento.value, motivo:motivo.value,
         fatoGerador:fatoGerador.value, observacoes:observacoes.value, status: document.getElementById('status').value,
@@ -346,8 +351,8 @@ function render(){
 <td>${edit?cell(d.razao,i):d.razao||''}</td>
 <td>${edit?cell(d.nfCliente,i):d.nfCliente||''}</td>
 <td>${edit?cell(d.uf,i):d.uf||''}</td>
-<td>${edit?cell(d.valorNFS,i):d.valorNFS||''}</td>
-<td>${edit?cell(d.valorDT,i):d.valorDT||''}</td>
+<td>${edit?cell(d.valorNFS,i):moedaBR(d.valorNFS)}</td>
+<td>${edit?cell(d.valorDT,i):moedaBR(d.valorDT)}</td>
 <td>${edit?cell(d.tipoVeiculo,i):d.tipoVeiculo||''}</td>
 <td>${edit?cell(d.numeroDT,i):d.numeroDT||''}</td>
 <td>${edit?cell(d.dataVencimento,i):d.dataVencimento||''}</td>
@@ -425,6 +430,20 @@ function gerarCamposNF(){
       </body>
     </html>
   `);
+}
+
+  function formatarMoeda(campo){
+  let v = campo.value.replace(/\D/g, '');
+  v = (Number(v) / 100).toFixed(2);
+  campo.value = v.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function moedaBR(v){
+  if(v===null || v===undefined || v==='') return '';
+  return Number(v).toLocaleString('pt-BR', {
+    style:'currency',
+    currency:'BRL'
+  });
 }
   
 </script>
