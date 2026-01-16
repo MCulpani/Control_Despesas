@@ -274,6 +274,11 @@ function salvar(){
       });
     });
     localStorage.setItem('despesas',JSON.stringify(despesas));
+    
+    // FORÇA ATUALIZAÇÃO IMEDIATA DA TABELA
+    mostrar('despesas');
+    render();
+
     alert('Despesa salva com sucesso (rateada)');
     novaDespesa();
   });
@@ -333,9 +338,9 @@ function render(){
   </select>`:
   `<span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span>`
 }</td>
-<td>${d.nota?`<a href="${d.nota}" target="_blank">Abrir</a>`:'-'}</td>
-<td>${d.pag?`<a href="${d.pag}" target="_blank">Abrir</a>`:'-'}</td>
-<td>${d.neg?`<a href="${d.neg}" target="_blank">Abrir</a>`:'-'}</td>
+<td>${d.nota?`<a href="${d.nota}" target="_blank" rel="noopener">Abrir</a>`:'-'}</td>
+<td>${d.pag?`<a href="${d.pag}" target="_blank" rel="noopener">Abrir</a>`:'-'}</td>
+<td>${d.neg?`<a href="${d.neg}" target="_blank" rel="noopener">Abrir</a>`:'-'}</td>
 <td>
 ${edit?
 `<button class="btn-sm save" onclick="salvarLinha(${i})">Salvar</button>
