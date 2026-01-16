@@ -244,8 +244,15 @@ window.addEventListener("DOMContentLoaded",()=>{
 
   <!-- Filtros à direita -->
   <div style="display:flex; gap:8px; align-items:center">
-   <input type="date" id="filtroDataIni" title="Data início" onchange="render()">
-   <input type="date" id="filtroDataFim" title="Data fim" onchange="render()">
+   <div style="display:flex; flex-direction:column">
+  <label style="font-size:11px;color:#9ca3af">Data início</label>
+  <input type="date" id="filtroDataIni" onchange="render()">
+</div>
+
+<div style="display:flex; flex-direction:column">
+  <label style="font-size:11px;color:#9ca3af">Data fim</label>
+  <input type="date" id="filtroDataFim" onchange="render()">
+</div>
     
     <select id="filtroFilial" onchange="render()">
       <option value="">Filial</option>
