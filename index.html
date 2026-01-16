@@ -234,9 +234,50 @@ window.addEventListener("DOMContentLoaded",()=>{
 
 <section id="despesas" class="card" style="display:none">
 <h3>Despesas Cadastradas</h3>
-<div style="margin-bottom:12px">
-<button onclick="exportarExcel()" style="margin-right:6px;padding:8px 14px;border:none;border-radius:8px;background:#22c55e;font-weight:bold;cursor:pointer">Exportar Excel</button>
-<button onclick="exportarPDF()" style="padding:8px 14px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-weight:bold;cursor:pointer">Exportar PDF</button>
+<div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; gap:10px">
+
+  <!-- Botões à esquerda -->
+  <div>
+    <button onclick="exportarExcel()" style="margin-right:6px;padding:8px 14px;border:none;border-radius:8px;background:#22c55e;font-weight:bold;cursor:pointer">Exportar Excel</button>
+    <button onclick="exportarPDF()" style="padding:8px 14px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-weight:bold;cursor:pointer">Exportar PDF</button>
+  </div>
+
+  <!-- Filtros à direita -->
+  <div style="display:flex; gap:8px; align-items:center">
+    <input type="date" id="filtroData" title="Data vencimento">
+    
+    <select id="filtroFilial">
+      <option value="">Filial</option>
+      <option>JOI</option>
+      <option>EAA</option>
+      <option>RCO</option>
+      <option>CAS</option>
+      <option>CLM</option>
+    </select>
+
+    <select id="filtroServico">
+      <option value="">Serviço</option>
+      <option>Taxa de Desembarque</option>
+      <option>Taxa de Embarque</option>
+      <option>Armazenagem</option>
+      <option>Travessia de Balsa</option>
+      <option>Descarga Manual</option>
+      <option>Redespacho</option>
+      <option>Descarga Maquinário</option>
+    </select>
+
+    <select id="filtroFato">
+      <option value="">Fato Gerador</option>
+      <option>Incidência Normal</option>
+      <option>Desacordo comercial</option>
+      <option>Falha Operacional TGL</option>
+      <option>Falha Operacional TIGRE</option>
+      <option>Indisponibilidade Cliente</option>
+      <option>Eventos Atípicos</option>
+    </select>
+
+    <button onclick="limparFiltros()" class="btn-sm cancel">Limpar</button>
+  </div>
 </div>
 <table>
 <thead>
@@ -343,8 +384,9 @@ function excluir(i){
 function cell(v,i){return `<input data-row="${i}" value="${v||''}">`}
 
 function render(){
-  tbody.innerHTML='';
-  despesas.forEach((d,i)=>{
+tbody.innerHTML='';
+const listaFiltrada = aplicarFiltros(despesas);
+listaFiltrada.forEach((d,i)=>{
     const edit = editRow===i;
     tbody.innerHTML+=`<tr>
 <td>${edit?cell(d.filial,i):d.filial||''}</td>    
@@ -450,6 +492,29 @@ function dataBR(data){
   if(!data) return '';
   const [y,m,d] = data.split('-');
   return `${d}/${m}/${y}`;
+}
+
+  function aplicarFiltros(lista){
+  const fData = filtroData.value;
+  const fFilial = filtroFilial.value;
+  const fServico = filtroServico.value;
+  const fFato = filtroFato.value;
+
+  return lista.filter(d => {
+    if(fData && d.dataVencimento !== fData) return false;
+    if(fFilial && d.filial !== fFilial) return false;
+    if(fServico && d.tipoServico !== fServico) return false;
+    if(fFato && d.fatoGerador !== fFato) return false;
+    return true;
+  });
+}
+
+function limparFiltros(){
+  filtroData.value = '';
+  filtroFilial.value = '';
+  filtroServico.value = '';
+  filtroFato.value = '';
+  render();
 }
   
 </script>
