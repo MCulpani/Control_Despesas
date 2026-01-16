@@ -180,7 +180,7 @@ window.addEventListener("DOMContentLoaded",()=>{
 </select>
 </div>
 <div><label>Número DT</label><input id="numeroDT"></div>
-<div><label>Data Vencimento</label><input type="date" id="dataVencimento"></div>
+<div><label>Data Vencimento</label><input type="date" id="dataVencimento" onclick="this.showPicker()"></div>
 <div class="col-2"><label>Cliente</label><input id="cliente"></div>
 <div class="col-2">
 <label>Tipo de Serviço</label>
@@ -246,12 +246,12 @@ window.addEventListener("DOMContentLoaded",()=>{
   <div style="display:flex; gap:8px; align-items:center">
    <div style="display:flex; flex-direction:column">
   <label style="font-size:11px;color:#9ca3af">Data início</label>
-  <input type="date" id="filtroDataIni" onchange="render()">
+  <input type="date" id="filtroDataIni" onclick="this.showPicker()" onchange="render()">
 </div>
 
 <div style="display:flex; flex-direction:column">
   <label style="font-size:11px;color:#9ca3af">Data fim</label>
-  <input type="date" id="filtroDataFim" onchange="render()">
+  <input type="date" id="filtroDataFim" onclick="this.showPicker()" onchange="render()">
 </div>
     
     <select id="filtroFilial" onchange="render()">
