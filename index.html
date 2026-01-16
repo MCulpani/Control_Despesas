@@ -244,7 +244,8 @@ window.addEventListener("DOMContentLoaded",()=>{
 
   <!-- Filtros à direita -->
   <div style="display:flex; gap:8px; align-items:center">
-    <input type="date" id="filtroData" title="Data vencimento" onchange="render()">
+   <input type="date" id="filtroDataIni" title="Data início" onchange="render()">
+   <input type="date" id="filtroDataFim" title="Data fim" onchange="render()">
     
     <select id="filtroFilial" onchange="render()">
       <option value="">Filial</option>
@@ -494,14 +495,16 @@ function dataBR(data){
   return `${d}/${m}/${y}`;
 }
 
-  function aplicarFiltros(lista){
-  const fData = filtroData.value;
+ function aplicarFiltros(lista){
+  const fIni = filtroDataIni.value;
+  const fFim = filtroDataFim.value;
   const fFilial = filtroFilial.value;
   const fServico = filtroServico.value;
   const fFato = filtroFato.value;
 
   return lista.filter(d => {
-    if(fData && d.dataVencimento !== fData) return false;
+    if(fIni && d.dataVencimento < fIni) return false;
+    if(fFim && d.dataVencimento > fFim) return false;
     if(fFilial && d.filial !== fFilial) return false;
     if(fServico && d.tipoServico !== fServico) return false;
     if(fFato && d.fatoGerador !== fFato) return false;
@@ -510,7 +513,8 @@ function dataBR(data){
 }
 
 function limparFiltros(){
-  filtroData.value = '';
+  filtroDataIni.value = '';
+  filtroDataFim.value = '';
   filtroFilial.value = '';
   filtroServico.value = '';
   filtroFato.value = '';
