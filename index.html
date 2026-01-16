@@ -260,6 +260,7 @@ function salvar(){
   if(nfs.length === 0){ alert('Informe a quantidade e os números das NFs'); return; }
   const valorTotal = parseFloat(valorNFS.value || 0);
   const valorRateado = (valorTotal / nfs.length).toFixed(2);
+  const statusSelecionado = document.getElementById('status').value;
 
   Promise.all([ lerArquivo(nota.files[0]), lerArquivo(compPag.files[0]), lerArquivo(compNeg.files[0]) ])
   .then(([n,p,ne])=>{
@@ -269,7 +270,7 @@ function salvar(){
         valorNFS:valorRateado, valorDT:valorDT.value, tipoVeiculo:tipoVeiculo.value,
         numeroDT:numeroDT.value, dataVencimento:dataVencimento.value, cliente:cliente.value,
         tipoServico:tipoServico.value, embutimento:embutimento.value, motivo:motivo.value,
-        fatoGerador:fatoGerador.value, observacoes:observacoes.value, status:status.value,
+        fatoGerador:fatoGerador.value, observacoes:observacoes.value, status: document.getElementById('status').value,
         nota:n, pag:p, neg:ne
       });
     });
