@@ -244,9 +244,9 @@ window.addEventListener("DOMContentLoaded",()=>{
 
   <!-- Filtros à direita -->
   <div style="display:flex; gap:8px; align-items:center">
-    <input type="date" id="filtroData" title="Data vencimento">
+    <input type="date" id="filtroData" title="Data vencimento" onchange="render()">
     
-    <select id="filtroFilial">
+    <select id="filtroFilial" onchange="render()">
       <option value="">Filial</option>
       <option>JOI</option>
       <option>EAA</option>
@@ -255,7 +255,7 @@ window.addEventListener("DOMContentLoaded",()=>{
       <option>CLM</option>
     </select>
 
-    <select id="filtroServico">
+   <select id="filtroServico" onchange="render()">
       <option value="">Serviço</option>
       <option>Taxa de Desembarque</option>
       <option>Taxa de Embarque</option>
@@ -266,7 +266,7 @@ window.addEventListener("DOMContentLoaded",()=>{
       <option>Descarga Maquinário</option>
     </select>
 
-    <select id="filtroFato">
+    <select id="filtroFato" onchange="render()">
       <option value="">Fato Gerador</option>
       <option>Incidência Normal</option>
       <option>Desacordo comercial</option>
@@ -384,11 +384,11 @@ function excluir(i){
 function cell(v,i){return `<input data-row="${i}" value="${v||''}">`}
 
 function render(){
-tbody.innerHTML='';
-const listaFiltrada = aplicarFiltros(despesas);
-listaFiltrada.forEach((d,i)=>{
-    const edit = editRow===i;
-    tbody.innerHTML+=`<tr>
+  tbody.innerHTML='';
+  const listaFiltrada = aplicarFiltros(despesas);
+  listaFiltrada.forEach((d,i)=>{
+  const edit = editRow===i;
+  tbody.innerHTML+=`<tr>
 <td>${edit?cell(d.filial,i):d.filial||''}</td>    
 <td>${edit?cell(d.razao,i):d.razao||''}</td>
 <td>${edit?cell(d.nfCliente,i):d.nfCliente||''}</td>
