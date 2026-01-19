@@ -284,6 +284,28 @@ window.addEventListener("DOMContentLoaded",()=>{
       <option>Eventos Atípicos</option>
     </select>
 
+    <select id="filtroMes" onchange="render()">
+  <option value="">Mês</option>
+  <option value="01">Janeiro</option>
+  <option value="02">Fevereiro</option>
+  <option value="03">Março</option>
+  <option value="04">Abril</option>
+  <option value="05">Maio</option>
+  <option value="06">Junho</option>
+  <option value="07">Julho</option>
+  <option value="08">Agosto</option>
+  <option value="09">Setembro</option>
+  <option value="10">Outubro</option>
+  <option value="11">Novembro</option>
+  <option value="12">Dezembro</option>
+</select>
+
+<select id="filtroQuinzena" onchange="render()">
+  <option value="">Quinzena</option>
+  <option value="1">1° quinzena</option>
+  <option value="2">2° quinzena</option>
+</select>
+
     <button onclick="limparFiltros()" class="btn-sm cancel">Limpar</button>
   </div>
 </div>
@@ -555,13 +577,24 @@ function dataBR(data){
   const fFilial = filtroFilial.value;
   const fServico = filtroServico.value;
   const fFato = filtroFato.value;
+  const fMes = filtroMes.value;
+  const fQuinzena = filtroQuinzena.value;
 
   return lista.filter(d => {
+    if(!d.dataVencimento) return false;
+
+    const [y,m,dia] = d.dataVencimento.split('-');
+    const diaNum = parseInt(dia);
+    const quinzena = diaNum <= 15 ? '1' : '2';
+
     if(fIni && d.dataVencimento < fIni) return false;
     if(fFim && d.dataVencimento > fFim) return false;
     if(fFilial && d.filial !== fFilial) return false;
     if(fServico && d.tipoServico !== fServico) return false;
     if(fFato && d.fatoGerador !== fFato) return false;
+    if(fMes && m !== fMes) return false;
+    if(fQuinzena && quinzena !== fQuinzena) return false;
+
     return true;
   });
 }
@@ -572,6 +605,8 @@ function limparFiltros(){
   filtroFilial.value = '';
   filtroServico.value = '';
   filtroFato.value = '';
+  filtroMes.value = '';
+  filtroQuinzena.value = '';
   render();
 }
 
