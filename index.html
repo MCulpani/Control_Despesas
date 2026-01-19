@@ -66,9 +66,9 @@ a{color:#38bdf8;text-decoration:none}
 </style>
 
 <!-- Libs originais -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.29/dist/jspdf.plugin.autotable.min.js"></script>
 
 <!-- Firebase Login -->
 <script type="module">
@@ -363,58 +363,51 @@ function mostrar(id){
   if(id==='despesas') render();
 }
 
+function lerArquivo(file){
+  return new Promise(res=>{
+    if(!file) return res(null);
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.readAsDataURL(file);
+  });
+}
+
 function salvar(){
   if(!nota.files[0]){ alert('Anexe a nota fiscal'); return; }
-
   const nfs = document.querySelectorAll('.nf-item');
   if(nfs.length === 0){ alert('Informe a quantidade e os números das NFs'); return; }
-
-  const valorTotal = parseFloat(valorNFS.value.replace(/\./g,'').replace(',','.') || 0);
-  const valorDTnum = parseFloat(valorDT.value.replace(/\./g,'').replace(',','.') || 0);
+  const valorTotal = parseFloat(
+  valorNFS.value.replace(/\./g,'').replace(',','.') || 0
+);
+  const valorDTnum = parseFloat(
+  valorDT.value.replace(/\./g,'').replace(',','.') || 0
+);
   const valorRateado = (valorTotal / nfs.length).toFixed(2);
+  const statusSelecionado = document.getElementById('status').value;
 
-  Promise.all([
-    enviarArquivo(nota.files[0]),
-    enviarArquivo(compPag.files[0]),
-    enviarArquivo(compNeg.files[0])
-  ]).then(([n, p, ne]) => {
-
-    console.log("URL nota:", n);
-    console.log("URL pag:", p);
-    console.log("URL neg:", ne);
-
+  Promise.all([ lerArquivo(nota.files[0]), lerArquivo(compPag.files[0]), lerArquivo(compNeg.files[0]) ])
+  .then(([n,p,ne])=>{
     nfs.forEach(inputNF=>{
       despesas.push({
-        filial:filial.value,
-        razao:razao.value,
-        nfCliente:inputNF.value,
-        uf:uf.value,
-        valorNFS:valorRateado,
-        valorDT:valorDTnum.toFixed(2),
-        tipoVeiculo:tipoVeiculo.value,
-        numeroDT:numeroDT.value,
-        dataVencimento:dataVencimento.value,
-        cliente:cliente.value,
-        tipoServico:tipoServico.value,
-        embutimento:embutimento.value,
-        motivo:motivo.value,
-        fatoGerador:fatoGerador.value,
-        observacoes:observacoes.value,
-        status: document.getElementById('status').value,
-        nota: n,
-        pag: p,
-        neg: ne
+        filial:filial.value, razao:razao.value, nfCliente:inputNF.value, uf:uf.value,
+        valorNFS:valorRateado, valorDT:valorDTnum.toFixed(2), tipoVeiculo:tipoVeiculo.value,
+        numeroDT:numeroDT.value, dataVencimento:dataVencimento.value, cliente:cliente.value,
+        tipoServico:tipoServico.value, embutimento:embutimento.value, motivo:motivo.value,
+        fatoGerador:fatoGerador.value, observacoes:observacoes.value, status: document.getElementById('status').value,
+        nota:n, pag:p, neg:ne
       });
     });
-
     localStorage.setItem('despesas',JSON.stringify(despesas));
-    despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
+    
+// RECARREGA DA MEMÓRIA DO NAVEGADOR
+despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
 
-    mostrar('despesas');
-    render();
+// MOSTRA E RENDERIZA DE NOVO
+mostrar('despesas');
+render();
 
-    alert('Despesa salva com sucesso');
-    novaDespesa();
+alert('Despesa salva com sucesso (rateada)');
+novaDespesa();
   });
 }
 
@@ -598,76 +591,19 @@ for(let R = 1; R <= range.e.r; ++R){
   XLSX.writeFile(wb, "despesas.xlsx");
 }
   
-async function exportarPDF(){
+function exportarPDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("l","pt","a4");
-
-  const lista = aplicarFiltros(despesas)
-    .sort((a,b)=> (a.dataVencimento||'').localeCompare(b.dataVencimento||''));
-
-  const body = [];
-  let mesAtual = '';
-  let quinzenaAtual = '';
-
-  lista.forEach(d=>{
-    const ma = mesAno(d.dataVencimento);
-    const qz = quinzena(d.dataVencimento);
-
-    if(ma !== mesAtual){
-      mesAtual = ma;
-      quinzenaAtual = '';
-      body.push([{ content: ma || 'Sem data', colSpan: 19, styles:{fontStyle:'bold'} }]);
-    }
-
-    if(qz !== quinzenaAtual){
-      quinzenaAtual = qz;
-      body.push([{ content: qz, colSpan: 19, styles:{fontStyle:'bold'} }]);
-    }
-
-    body.push([
-      d.filial||'', d.razao||'', d.nfCliente||'', d.uf||'',
-      moedaBR(d.valorNFS), moedaBR(d.valorDT), d.tipoVeiculo||'',
-      d.numeroDT||'', dataBR(d.dataVencimento), d.cliente||'',
-      d.tipoServico||'', d.embutimento||'', d.motivo||'',
-      d.fatoGerador||'', d.observacoes||'', d.status||'',
-
-      d.nota ? { content:"Abrir", link:d.nota } : '',
-      d.pag  ? { content:"Abrir", link:d.pag  } : '',
-      d.neg  ? { content:"Abrir", link:d.neg  } : ''
-    ]);
-  });
-
-  doc.text("Relatório de Despesas", 40, 30);
-  doc.text("Clique em 'Abrir' para acessar os anexos.", 40, 45);
-
-  doc.autoTable({
-    startY:60,
-    head:[[
-      "Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT",
-      "Venc.","Cliente","Serviço","Embut.","Motivo","Fato Gerador",
-      "Obs.","Status","Nota","Form. Custo","Racional"
-    ]],
-    body,
-    styles:{fontSize:7, cellPadding:3}
-  });
-
-  doc.save("relatorio_despesas.pdf");
+  const cols = ["Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
+  const rows = despesas.map(d => [
+    d.filial,d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
+    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,d.status
+  ]);
+  doc.text("Relatório de Despesas",40,30);
+  doc.autoTable({ head:[cols], body:rows, startY:50, styles:{fontSize:8} });
+  doc.save("despesas.pdf");
 }
-  
-async function enviarArquivo(file){
-  if(!file) return null;
-  const fd = new FormData();
-  fd.append('arquivo', file);
 
-  const r = await fetch('/upload', {
-    method: 'POST',
-    body: fd
-  });
-
-  const j = await r.json();
-  return j.url; // URL real do PDF
-}
-  
 function gerarCamposNF(){
   const qtd = parseInt(qtdNF.value || 0);
   listaNF.innerHTML = '';
@@ -680,12 +616,16 @@ function gerarCamposNF(){
   }
 }
   
-  function abrirArquivo(url){
-  if(!url){
-    alert("Arquivo não encontrado");
-    return;
-  }
-  window.open(url, "_blank");
+  function abrirArquivo(base64){
+  const win = window.open();
+  win.document.write(`
+    <html>
+      <head><title>Documento</title></head>
+      <body style="margin:0">
+        <embed src="${base64}" type="application/pdf" width="100%" height="100%"/>
+      </body>
+    </html>
+  `);
 }
 
   function formatarMoeda(campo){
