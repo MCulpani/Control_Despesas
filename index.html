@@ -598,74 +598,78 @@ function exportarPDF(){
   const lista = aplicarFiltros(despesas)
     .sort((a,b) => (a.dataVencimento || '').localeCompare(b.dataVencimento || ''));
 
-  let y = 30;
+  const body = [];
   let mesAtual = '';
   let quinzenaAtual = '';
-
-  doc.setFontSize(12);
-  doc.text("Relatório de Despesas", 40, 20);
 
   lista.forEach(d => {
     const ma = mesAno(d.dataVencimento);
     const qz = quinzena(d.dataVencimento);
 
-    // Quebra por Mês
+    // Quebra por mês
     if(ma !== mesAtual){
       mesAtual = ma;
       quinzenaAtual = '';
-      y += 20;
-      doc.setFontSize(11);
-      doc.setTextColor(56,189,248);
-      doc.text(ma || 'Sem data', 40, y);
-      y += 10;
+      body.push([
+        { content: ma || 'Sem data', colSpan: 20, styles:{fillColor:[15,23,42], textColor:[56,189,248], fontStyle:'bold'} }
+      ]);
     }
 
-    // Quebra por Quinzena
+    // Quebra por quinzena
     if(qz !== quinzenaAtual){
       quinzenaAtual = qz;
-      doc.setFontSize(10);
-      doc.setTextColor(165,243,252);
-      doc.text(qz, 50, y);
-      y += 10;
+      body.push([
+        { content: qz, colSpan: 20, styles:{fillColor:[2,6,23], textColor:[165,243,252], fontStyle:'bold'} }
+      ]);
     }
 
-    doc.setFontSize(8);
-    doc.setTextColor(255,255,255);
+    body.push([
+      d.filial||'', d.razao||'', d.nfCliente||'', d.uf||'',
+      moedaBR(d.valorNFS), moedaBR(d.valorDT), d.tipoVeiculo||'',
+      d.numeroDT||'', dataBR(d.dataVencimento), d.cliente||'',
+      d.tipoServico||'', d.embutimento||'', d.motivo||'',
+      d.fatoGerador||'', d.observacoes||'', d.status||'',
+      d.nota ? 'Abrir' : '',
+      d.pag ? 'Abrir' : '',
+      d.neg ? 'Abrir' : '',
+      '' // ações (vazio no PDF)
+    ]);
+  });
 
-    const linha = `
-${d.filial} | ${d.razao} | NF: ${d.nfCliente} | ${dataBR(d.dataVencimento)} 
-Valor NF: ${moedaBR(d.valorNFS)} | Valor DT: ${moedaBR(d.valorDT)} | ${d.tipoServico} | ${d.status}
-`;
+  doc.text("Relatório de Despesas", 40, 30);
 
-    doc.text(linha, 60, y);
-    y += 12;
+  doc.autoTable({
+    startY: 50,
+    head: [[
+      "Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT",
+      "Venc.","Cliente","Serviço","Embut.","Motivo","Fato Gerador",
+      "Obs.","Status","Nota","Form. Custo","Racional",""
+    ]],
+    body,
+    styles:{ fontSize:7, cellPadding:3 },
+    didDrawCell: function(data){
+      const col = data.column.index;
+      const row = data.row.raw;
 
-    // Links dos anexos
-    let linkX = 60;
+      // Colunas de anexos: 16,17,18
+      if([16,17,18].includes(col) && data.cell.text[0] === 'Abrir'){
+        const idx = data.row.index;
+        const registro = lista.filter(r => r.dataVencimento)[idx];
 
-    if(d.nota){
-      doc.textWithLink("Nota Prestador", linkX, y, { url: d.nota });
-      linkX += 90;
-    }
-    if(d.pag){
-      doc.textWithLink("Formulário Custo", linkX, y, { url: d.pag });
-      linkX += 100;
-    }
-    if(d.neg){
-      doc.textWithLink("Racional Custo", linkX, y, { url: d.neg });
-    }
+        let url = '';
+        if(col===16) url = registro?.nota;
+        if(col===17) url = registro?.pag;
+        if(col===18) url = registro?.neg;
 
-    y += 14;
-
-    if(y > 550){
-      doc.addPage();
-      y = 40;
+        if(url){
+          doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
+        }
+      }
     }
   });
 
   doc.save("despesas.pdf");
 }
-
 function gerarCamposNF(){
   const qtd = parseInt(qtdNF.value || 0);
   listaNF.innerHTML = '';
