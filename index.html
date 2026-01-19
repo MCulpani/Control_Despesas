@@ -591,36 +591,44 @@ for(let R = 1; R <= range.e.r; ++R){
   XLSX.writeFile(wb, "despesas.xlsx");
 }
   
-function exportarPDF(){
+async function exportarPDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("l","pt","a4");
+  const zip = new JSZip();
 
   const lista = aplicarFiltros(despesas)
-    .sort((a,b) => (a.dataVencimento || '').localeCompare(b.dataVencimento || ''));
+    .sort((a,b)=> (a.dataVencimento||'').localeCompare(b.dataVencimento||''));
 
   const body = [];
-  let mesAtual = '';
-  let quinzenaAtual = '';
+  let mesAtual='', quinzenaAtual='';
+  let contador = 1;
 
-  lista.forEach(d => {
+  lista.forEach(d=>{
     const ma = mesAno(d.dataVencimento);
     const qz = quinzena(d.dataVencimento);
 
-    // Quebra por mês
-    if(ma !== mesAtual){
-      mesAtual = ma;
-      quinzenaAtual = '';
-      body.push([
-        { content: ma || 'Sem data', colSpan: 20, styles:{fillColor:[15,23,42], textColor:[56,189,248], fontStyle:'bold'} }
-      ]);
+    if(ma!==mesAtual){
+      mesAtual=ma; quinzenaAtual='';
+      body.push([{ content: ma||'Sem data', colSpan:20, styles:{fontStyle:'bold'} }]);
+    }
+    if(qz!==quinzenaAtual){
+      quinzenaAtual=qz;
+      body.push([{ content:qz, colSpan:20, styles:{fontStyle:'bold'} }]);
     }
 
-    // Quebra por quinzena
-    if(qz !== quinzenaAtual){
-      quinzenaAtual = qz;
-      body.push([
-        { content: qz, colSpan: 20, styles:{fillColor:[2,6,23], textColor:[165,243,252], fontStyle:'bold'} }
-      ]);
+    let notaNome='', pagNome='', negNome='';
+
+    if(d.nota){
+      notaNome = `Nota_${contador}.pdf`;
+      zip.file(notaNome, base64ToBlob(d.nota));
+    }
+    if(d.pag){
+      pagNome = `Formulario_${contador}.pdf`;
+      zip.file(pagNome, base64ToBlob(d.pag));
+    }
+    if(d.neg){
+      negNome = `Racional_${contador}.pdf`;
+      zip.file(negNome, base64ToBlob(d.neg));
     }
 
     body.push([
@@ -629,40 +637,35 @@ function exportarPDF(){
       d.numeroDT||'', dataBR(d.dataVencimento), d.cliente||'',
       d.tipoServico||'', d.embutimento||'', d.motivo||'',
       d.fatoGerador||'', d.observacoes||'', d.status||'',
-      d.nota ? { content:"Abrir", link:d.nota } : '',
-      d.pag  ? { content:"Abrir", link:d.pag  } : '',
-      d.neg  ? { content:"Abrir", link:d.neg  } : '',
-      ''
+      notaNome, pagNome, negNome, ''
     ]);
+
+    contador++;
   });
 
   doc.text("Relatório de Despesas", 40, 30);
+  doc.text("Os anexos estão no arquivo anexos.zip", 40, 45);
 
   doc.autoTable({
-    startY: 50,
-    head: [[
+    startY:60,
+    head:[[
       "Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT",
       "Venc.","Cliente","Serviço","Embut.","Motivo","Fato Gerador",
       "Obs.","Status","Nota","Form. Custo","Racional",""
     ]],
     body,
-    styles:{ fontSize:7, cellPadding:3 },
-
-    didDrawCell: function(data){
-      const raw = data.cell.raw;
-      if(raw && raw.link){
-        doc.link(
-          data.cell.x,
-          data.cell.y,
-          data.cell.width,
-          data.cell.height,
-          { url: raw.link }
-        );
-      }
-    }
+    styles:{fontSize:7, cellPadding:3}
   });
 
-  doc.save("despesas.pdf");
+  // Salva PDF
+  doc.save("relatorio_despesas.pdf");
+
+  // Gera ZIP
+  const zipBlob = await zip.generateAsync({ type:'blob' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(zipBlob);
+  link.download = "anexos.zip";
+  link.click();
 }
   
 function gerarCamposNF(){
@@ -768,6 +771,15 @@ function quinzena(data){
 
   document.getElementById('totalValorNF').textContent = 
     soma.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+}
+
+  function base64ToBlob(base64, type='application/pdf'){
+  const byteChars = atob(base64.split(',')[1] || base64);
+  const byteNums = new Array(byteChars.length);
+  for(let i=0;i<byteChars.length;i++){
+    byteNums[i] = byteChars.charCodeAt(i);
+  }
+  return new Blob([new Uint8Array(byteNums)], { type });
 }
   
 </script>
