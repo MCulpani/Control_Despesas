@@ -639,9 +639,14 @@ async function exportarPDF(){
     let notaNome='', pagNome='', negNome='';
 
     if(d.nota){
-      notaNome = `Nota_${contador}.pdf`;
-      zip.file(notaNome, base64ToBlob(d.nota));
-    }
+  const blobTeste = base64ToBlob(d.nota);
+  const urlTeste = URL.createObjectURL(blobTeste);
+  window.open(urlTeste);   // <-- aqui é o teste
+
+  // depois de testar, você volta para o zip:
+  notaNome = `Nota_${contador}.pdf`;
+  zip.file(notaNome, blobTeste);
+}
     if(d.pag){
       pagNome = `Formulario_${contador}.pdf`;
       zip.file(pagNome, base64ToBlob(d.pag));
