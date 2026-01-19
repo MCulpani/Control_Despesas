@@ -529,12 +529,10 @@ ${edit?
 }
 
 function exportarExcel(){
-  // Usa exatamente a mesma lista filtrada e ordenada da tela
   const lista = aplicarFiltros(despesas)
     .sort((a,b) => (a.dataVencimento || '').localeCompare(b.dataVencimento || ''));
 
   const dadosExcel = [];
-
   let mesAtual = '';
   let quinzenaAtual = '';
 
@@ -542,24 +540,17 @@ function exportarExcel(){
     const ma = mesAno(d.dataVencimento);
     const qz = quinzena(d.dataVencimento);
 
-    // Quebra por Mês
     if(ma !== mesAtual){
       mesAtual = ma;
       quinzenaAtual = '';
-      dadosExcel.push({ 
-        Filial: `==== ${ma} ====`
-      });
+      dadosExcel.push({ Filial: `==== ${ma} ====` });
     }
 
-    // Quebra por Quinzena
     if(qz !== quinzenaAtual){
       quinzenaAtual = qz;
-      dadosExcel.push({ 
-        Filial: `-- ${qz} --`
-      });
+      dadosExcel.push({ Filial: `-- ${qz} --` });
     }
 
-    // Linha real de dados
     dadosExcel.push({
       Filial: d.filial || '',
       Razao: d.razao || '',
@@ -583,16 +574,18 @@ function exportarExcel(){
     });
   });
 
-  const ws = XLSX.utils.json_to_sheet(dadosExcel, { skipHeader:false });
+  const ws = XLSX.utils.json_to_sheet(dadosExcel);
 
-  // Transforma colunas de anexos em hiperlinks
   const range = XLSX.utils.decode_range(ws['!ref']);
+
+  // Colunas dos anexos: Q, R, S
   for(let R = 1; R <= range.e.r; ++R){
-    ['Q','R','S'].forEach(col => { 
+    ['Q','R','S'].forEach(col => {
       const cell = ws[col + (R+1)];
       if(cell && cell.v && String(cell.v).startsWith('data:')){
-        cell.l = { Target: cell.v, Tooltip: "Abrir anexo" };
-        cell.v = 'Abrir';
+        const url = cell.v;
+        cell.f = `HYPERLINK("${url}","Abrir")`;
+        delete cell.v; // deixa só a fórmula
       }
     });
   }
@@ -601,7 +594,6 @@ function exportarExcel(){
   XLSX.utils.book_append_sheet(wb, ws, "Despesas");
   XLSX.writeFile(wb, "despesas.xlsx");
 }
-
 function exportarPDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("l","pt","a4");
