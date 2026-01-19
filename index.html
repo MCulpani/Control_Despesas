@@ -365,98 +365,56 @@ function mostrar(id){
 
 function salvar(){
   if(!nota.files[0]){ alert('Anexe a nota fiscal'); return; }
+
   const nfs = document.querySelectorAll('.nf-item');
   if(nfs.length === 0){ alert('Informe a quantidade e os números das NFs'); return; }
-  const valorTotal = parseFloat(
-  valorNFS.value.replace(/\./g,'').replace(',','.') || 0
-);
-  const valorDTnum = parseFloat(
-  valorDT.value.replace(/\./g,'').replace(',','.') || 0
-);
+
+  const valorTotal = parseFloat(valorNFS.value.replace(/\./g,'').replace(',','.') || 0);
+  const valorDTnum = parseFloat(valorDT.value.replace(/\./g,'').replace(',','.') || 0);
   const valorRateado = (valorTotal / nfs.length).toFixed(2);
-  const statusSelecionado = document.getElementById('status').value;
 
- Promise.all([
-  enviarArquivo(nota.files[0]),
-  enviarArquivo(compPag.files[0]),
-  enviarArquivo(compNeg.files[0])
-])
-async function exportarPDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("l","pt","a4");
+  Promise.all([
+    enviarArquivo(nota.files[0]),
+    enviarArquivo(compPag.files[0]),
+    enviarArquivo(compNeg.files[0])
+  ]).then(([n, p, ne]) => {
 
-  const lista = aplicarFiltros(despesas)
-    .sort((a,b)=> (a.dataVencimento||'').localeCompare(b.dataVencimento||''));
+    console.log("URL nota:", n);
+    console.log("URL pag:", p);
+    console.log("URL neg:", ne);
 
-  const body = [];
-  let mesAtual = '';
-  let quinzenaAtual = '';
-
-  lista.forEach(d=>{
-    const ma = mesAno(d.dataVencimento);
-    const qz = quinzena(d.dataVencimento);
-
-    if(ma !== mesAtual){
-      mesAtual = ma;
-      quinzenaAtual = '';
-      body.push([{ content: ma || 'Sem data', colSpan: 19, styles:{fontStyle:'bold'} }]);
-    }
-
-    if(qz !== quinzenaAtual){
-      quinzenaAtual = qz;
-      body.push([{ content: qz, colSpan: 19, styles:{fontStyle:'bold'} }]);
-    }
-
-    body.push([
-      d.filial||'', d.razao||'', d.nfCliente||'', d.uf||'',
-      moedaBR(d.valorNFS), moedaBR(d.valorDT), d.tipoVeiculo||'',
-      d.numeroDT||'', dataBR(d.dataVencimento), d.cliente||'',
-      d.tipoServico||'', d.embutimento||'', d.motivo||'',
-      d.fatoGerador||'', d.observacoes||'', d.status||'',
-
-      d.nota ? { content:"Abrir", link:d.nota } : '',
-      d.pag  ? { content:"Abrir", link:d.pag  } : '',
-      d.neg  ? { content:"Abrir", link:d.neg  } : ''
-    ]);
-  });
-
-  doc.text("Relatório de Despesas", 40, 30);
-  doc.text("Clique em 'Abrir' para acessar os anexos.", 40, 45);
-
-  doc.autoTable({
-    startY:60,
-    head:[[
-      "Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT",
-      "Venc.","Cliente","Serviço","Embut.","Motivo","Fato Gerador",
-      "Obs.","Status","Nota","Form. Custo","Racional"
-    ]],
-    body,
-    styles:{fontSize:7, cellPadding:3}
-  });
-
-  doc.save("relatorio_despesas.pdf");
-}
     nfs.forEach(inputNF=>{
       despesas.push({
-        filial:filial.value, razao:razao.value, nfCliente:inputNF.value, uf:uf.value,
-        valorNFS:valorRateado, valorDT:valorDTnum.toFixed(2), tipoVeiculo:tipoVeiculo.value,
-        numeroDT:numeroDT.value, dataVencimento:dataVencimento.value, cliente:cliente.value,
-        tipoServico:tipoServico.value, embutimento:embutimento.value, motivo:motivo.value,
-        fatoGerador:fatoGerador.value, observacoes:observacoes.value, status: document.getElementById('status').value,
-        nota:n, pag:p, neg:ne
+        filial:filial.value,
+        razao:razao.value,
+        nfCliente:inputNF.value,
+        uf:uf.value,
+        valorNFS:valorRateado,
+        valorDT:valorDTnum.toFixed(2),
+        tipoVeiculo:tipoVeiculo.value,
+        numeroDT:numeroDT.value,
+        dataVencimento:dataVencimento.value,
+        cliente:cliente.value,
+        tipoServico:tipoServico.value,
+        embutimento:embutimento.value,
+        motivo:motivo.value,
+        fatoGerador:fatoGerador.value,
+        observacoes:observacoes.value,
+        status: document.getElementById('status').value,
+        nota: n,
+        pag: p,
+        neg: ne
       });
     });
+
     localStorage.setItem('despesas',JSON.stringify(despesas));
-    
-// RECARREGA DA MEMÓRIA DO NAVEGADOR
-despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
+    despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
 
-// MOSTRA E RENDERIZA DE NOVO
-mostrar('despesas');
-render();
+    mostrar('despesas');
+    render();
 
-alert('Despesa salva com sucesso (rateada)');
-novaDespesa();
+    alert('Despesa salva com sucesso');
+    novaDespesa();
   });
 }
 
