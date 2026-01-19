@@ -381,7 +381,61 @@ function salvar(){
   enviarArquivo(compPag.files[0]),
   enviarArquivo(compNeg.files[0])
 ])
-.then(([n,p,ne])=>{
+async function exportarPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("l","pt","a4");
+
+  const lista = aplicarFiltros(despesas)
+    .sort((a,b)=> (a.dataVencimento||'').localeCompare(b.dataVencimento||''));
+
+  const body = [];
+  let mesAtual = '';
+  let quinzenaAtual = '';
+
+  lista.forEach(d=>{
+    const ma = mesAno(d.dataVencimento);
+    const qz = quinzena(d.dataVencimento);
+
+    if(ma !== mesAtual){
+      mesAtual = ma;
+      quinzenaAtual = '';
+      body.push([{ content: ma || 'Sem data', colSpan: 19, styles:{fontStyle:'bold'} }]);
+    }
+
+    if(qz !== quinzenaAtual){
+      quinzenaAtual = qz;
+      body.push([{ content: qz, colSpan: 19, styles:{fontStyle:'bold'} }]);
+    }
+
+    body.push([
+      d.filial||'', d.razao||'', d.nfCliente||'', d.uf||'',
+      moedaBR(d.valorNFS), moedaBR(d.valorDT), d.tipoVeiculo||'',
+      d.numeroDT||'', dataBR(d.dataVencimento), d.cliente||'',
+      d.tipoServico||'', d.embutimento||'', d.motivo||'',
+      d.fatoGerador||'', d.observacoes||'', d.status||'',
+
+      d.nota ? { content:"Abrir", link:d.nota } : '',
+      d.pag  ? { content:"Abrir", link:d.pag  } : '',
+      d.neg  ? { content:"Abrir", link:d.neg  } : ''
+    ]);
+  });
+
+  doc.text("Relatório de Despesas", 40, 30);
+  doc.text("Clique em 'Abrir' para acessar os anexos.", 40, 45);
+
+  doc.autoTable({
+    startY:60,
+    head:[[
+      "Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT",
+      "Venc.","Cliente","Serviço","Embut.","Motivo","Fato Gerador",
+      "Obs.","Status","Nota","Form. Custo","Racional"
+    ]],
+    body,
+    styles:{fontSize:7, cellPadding:3}
+  });
+
+  doc.save("relatorio_despesas.pdf");
+}
     nfs.forEach(inputNF=>{
       despesas.push({
         filial:filial.value, razao:razao.value, nfCliente:inputNF.value, uf:uf.value,
@@ -596,7 +650,6 @@ async function exportarPDF(){
   const body = [];
   let mesAtual = '';
   let quinzenaAtual = '';
-  let contador = 1;
 
   lista.forEach(d=>{
     const ma = mesAno(d.dataVencimento);
@@ -619,19 +672,18 @@ async function exportarPDF(){
       d.numeroDT||'', dataBR(d.dataVencimento), d.cliente||'',
       d.tipoServico||'', d.embutimento||'', d.motivo||'',
       d.fatoGerador||'', d.observacoes||'', d.status||'',
-      d.nota ? 'Disponível no sistema' : '',
-      d.pag  ? 'Disponível no sistema' : '',
-      d.neg  ? 'Disponível no sistema' : ''
-    ]);
 
-    contador++;
+      d.nota ? { content:"Abrir", link:d.nota } : '',
+      d.pag  ? { content:"Abrir", link:d.pag  } : '',
+      d.neg  ? { content:"Abrir", link:d.neg  } : ''
+    ]);
   });
 
   doc.text("Relatório de Despesas", 40, 30);
-  doc.text("Os anexos devem ser abertos pelo sistema (botão Abrir).", 40, 45);
+  doc.text("Clique em 'Abrir' para acessar os anexos.", 40, 45);
 
   doc.autoTable({
-    startY: 60,
+    startY:60,
     head:[[
       "Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT",
       "Venc.","Cliente","Serviço","Embut.","Motivo","Fato Gerador",
@@ -643,7 +695,7 @@ async function exportarPDF(){
 
   doc.save("relatorio_despesas.pdf");
 }
-
+  
 async function enviarArquivo(file){
   if(!file) return null;
   const fd = new FormData();
