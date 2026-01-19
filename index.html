@@ -363,15 +363,6 @@ function mostrar(id){
   if(id==='despesas') render();
 }
 
-function lerArquivo(file){
-  return new Promise(res=>{
-    if(!file) return res(null);
-    const r=new FileReader();
-    r.onload=()=>res(r.result);
-    r.readAsDataURL(file);
-  });
-}
-
 function salvar(){
   if(!nota.files[0]){ alert('Anexe a nota fiscal'); return; }
   const nfs = document.querySelectorAll('.nf-item');
@@ -385,8 +376,12 @@ function salvar(){
   const valorRateado = (valorTotal / nfs.length).toFixed(2);
   const statusSelecionado = document.getElementById('status').value;
 
-  Promise.all([ lerArquivo(nota.files[0]), lerArquivo(compPag.files[0]), lerArquivo(compNeg.files[0]) ])
-  .then(([n,p,ne])=>{
+ Promise.all([
+  enviarArquivo(nota.files[0]),
+  enviarArquivo(compPag.files[0]),
+  enviarArquivo(compNeg.files[0])
+])
+.then(([n,p,ne])=>{
     nfs.forEach(inputNF=>{
       despesas.push({
         filial:filial.value, razao:razao.value, nfCliente:inputNF.value, uf:uf.value,
@@ -590,70 +585,32 @@ for(let R = 1; R <= range.e.r; ++R){
   XLSX.utils.book_append_sheet(wb, ws, "Despesas");
   XLSX.writeFile(wb, "despesas.xlsx");
 }
-
-function base64ToBlob(base64, type='application/pdf'){
-  let pure = base64.trim();
-
-  // Remove prefixo data:
-  if(pure.startsWith('data:')){
-    pure = pure.split(',')[1];
-  }
-
-  // Remove quebras de linha e espaços
-  pure = pure.replace(/\s/g, '');
-
-  const byteChars = atob(pure);
-  const byteNums = new Array(byteChars.length);
-  for(let i=0;i<byteChars.length;i++){
-    byteNums[i] = byteChars.charCodeAt(i);
-  }
-
-  return new Blob([new Uint8Array(byteNums)], { type });
-}
   
 async function exportarPDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("l","pt","a4");
-  const zip = new JSZip();
 
   const lista = aplicarFiltros(despesas)
     .sort((a,b)=> (a.dataVencimento||'').localeCompare(b.dataVencimento||''));
 
   const body = [];
-  let mesAtual='', quinzenaAtual='';
+  let mesAtual = '';
+  let quinzenaAtual = '';
   let contador = 1;
 
   lista.forEach(d=>{
     const ma = mesAno(d.dataVencimento);
     const qz = quinzena(d.dataVencimento);
 
-    if(ma!==mesAtual){
-      mesAtual=ma; quinzenaAtual='';
-      body.push([{ content: ma||'Sem data', colSpan:20, styles:{fontStyle:'bold'} }]);
-    }
-    if(qz!==quinzenaAtual){
-      quinzenaAtual=qz;
-      body.push([{ content:qz, colSpan:20, styles:{fontStyle:'bold'} }]);
+    if(ma !== mesAtual){
+      mesAtual = ma;
+      quinzenaAtual = '';
+      body.push([{ content: ma || 'Sem data', colSpan: 19, styles:{fontStyle:'bold'} }]);
     }
 
-    let notaNome='', pagNome='', negNome='';
-
-    if(d.nota){
-  const blobTeste = base64ToBlob(d.nota);
-  const urlTeste = URL.createObjectURL(blobTeste);
-  window.open(urlTeste);   // <-- aqui é o teste
-
-  // depois de testar, você volta para o zip:
-  notaNome = `Nota_${contador}.pdf`;
-  zip.file(notaNome, blobTeste);
-}
-    if(d.pag){
-      pagNome = `Formulario_${contador}.pdf`;
-      zip.file(pagNome, base64ToBlob(d.pag));
-    }
-    if(d.neg){
-      negNome = `Racional_${contador}.pdf`;
-      zip.file(negNome, base64ToBlob(d.neg));
+    if(qz !== quinzenaAtual){
+      quinzenaAtual = qz;
+      body.push([{ content: qz, colSpan: 19, styles:{fontStyle:'bold'} }]);
     }
 
     body.push([
@@ -662,35 +619,43 @@ async function exportarPDF(){
       d.numeroDT||'', dataBR(d.dataVencimento), d.cliente||'',
       d.tipoServico||'', d.embutimento||'', d.motivo||'',
       d.fatoGerador||'', d.observacoes||'', d.status||'',
-      notaNome, pagNome, negNome, ''
+      d.nota ? 'Disponível no sistema' : '',
+      d.pag  ? 'Disponível no sistema' : '',
+      d.neg  ? 'Disponível no sistema' : ''
     ]);
 
     contador++;
   });
 
   doc.text("Relatório de Despesas", 40, 30);
-  doc.text("Os anexos estão no arquivo anexos.zip", 40, 45);
+  doc.text("Os anexos devem ser abertos pelo sistema (botão Abrir).", 40, 45);
 
   doc.autoTable({
-    startY:60,
+    startY: 60,
     head:[[
       "Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT",
       "Venc.","Cliente","Serviço","Embut.","Motivo","Fato Gerador",
-      "Obs.","Status","Nota","Form. Custo","Racional",""
+      "Obs.","Status","Nota","Form. Custo","Racional"
     ]],
     body,
     styles:{fontSize:7, cellPadding:3}
   });
 
-  // Salva PDF
   doc.save("relatorio_despesas.pdf");
+}
 
-  // Gera ZIP
-  const zipBlob = await zip.generateAsync({ type:'blob' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(zipBlob);
-  link.download = "anexos.zip";
-  link.click();
+async function enviarArquivo(file){
+  if(!file) return null;
+  const fd = new FormData();
+  fd.append('arquivo', file);
+
+  const r = await fetch('/upload', {
+    method: 'POST',
+    body: fd
+  });
+
+  const j = await r.json();
+  return j.url; // URL real do PDF
 }
   
 function gerarCamposNF(){
@@ -705,16 +670,12 @@ function gerarCamposNF(){
   }
 }
   
-  function abrirArquivo(base64){
-  const win = window.open();
-  win.document.write(`
-    <html>
-      <head><title>Documento</title></head>
-      <body style="margin:0">
-        <embed src="${base64}" type="application/pdf" width="100%" height="100%"/>
-      </body>
-    </html>
-  `);
+  function abrirArquivo(url){
+  if(!url){
+    alert("Arquivo não encontrado");
+    return;
+  }
+  window.open(url, "_blank");
 }
 
   function formatarMoeda(campo){
