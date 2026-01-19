@@ -637,15 +637,28 @@ function exportarPDF(){
   doc.text("Relatório de Despesas", 40, 30);
 
   doc.autoTable({
-    startY: 50,
-    head: [[
-      "Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT",
-      "Venc.","Cliente","Serviço","Embut.","Motivo","Fato Gerador",
-      "Obs.","Status","Nota","Form. Custo","Racional",""
-    ]],
-    body,
-    styles:{ fontSize:7, cellPadding:3 }
-  });
+  startY: 50,
+  head: [[
+    "Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT",
+    "Venc.","Cliente","Serviço","Embut.","Motivo","Fato Gerador",
+    "Obs.","Status","Nota","Form. Custo","Racional",""
+  ]],
+  body,
+  styles:{ fontSize:7, cellPadding:3 },
+
+  didDrawCell: function(data){
+    const raw = data.cell.raw;
+    if(raw && raw.link){
+      doc.link(
+        data.cell.x,
+        data.cell.y,
+        data.cell.width,
+        data.cell.height,
+        { url: raw.link }
+      );
+    }
+  }
+});
 
   doc.save("despesas.pdf");
 }
