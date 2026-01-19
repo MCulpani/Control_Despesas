@@ -242,6 +242,20 @@ window.addEventListener("DOMContentLoaded",()=>{
     <button onclick="exportarPDF()" style="padding:8px 14px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-weight:bold;cursor:pointer">Exportar PDF</button>
   </div>
 
+ <!-- Total central -->
+  <div style="
+    font-weight:bold;
+    font-size:14px;
+    color:#22c55e;
+    background:#020617;
+    padding:8px 14px;
+    border-radius:8px;
+    min-width:220px;
+    text-align:center;
+  ">
+    Total Valor NF: <span id="totalValorNF">R$ 0,00</span>
+  </div>
+  
   <!-- Filtros à direita -->
   <div style="display:flex; gap:8px; align-items:center">
    <div style="display:flex; flex-direction:column">
@@ -418,6 +432,7 @@ function render(){
 
 const listaFiltrada = aplicarFiltros(despesas)
   .sort((a,b) => (a.dataVencimento || '').localeCompare(b.dataVencimento || ''));
+  atualizarTotal(listaFiltrada);
 
 let mesAtual = '';
 let quinzenaAtual = '';
@@ -620,6 +635,17 @@ function quinzena(data){
   if(!data) return '';
   const dia = parseInt(data.split('-')[2]);
   return dia <= 15 ? '1° quinzena' : '2° quinzena';
+}
+
+  function atualizarTotal(lista){
+  let soma = 0;
+  lista.forEach(d => {
+    const v = parseFloat(d.valorNFS || 0);
+    if(!isNaN(v)) soma += v;
+  });
+
+  document.getElementById('totalValorNF').textContent = 
+    soma.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
 }
   
 </script>
