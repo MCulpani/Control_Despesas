@@ -556,8 +556,8 @@ function exportarExcel(){
       Razao: d.razao || '',
       NF: d.nfCliente || '',
       UF: d.uf || '',
-      Valor_NF: moedaBR(d.valorNFS),
-      Valor_DT: moedaBR(d.valorDT),
+      Valor_NF: Number(d.valorNFS || 0),
+      Valor_DT: Number(d.valorDT || 0),
       Veiculo: d.tipoVeiculo || '',
       DT: d.numeroDT || '',
       Vencimento: dataBR(d.dataVencimento),
@@ -575,6 +575,17 @@ function exportarExcel(){
   });
 
   const ws = XLSX.utils.json_to_sheet(dadosExcel);
+  // Força formato numérico com 2 casas decimais
+const range = XLSX.utils.decode_range(ws['!ref']);
+for(let R = 1; R <= range.e.r; ++R){
+  ['E','F'].forEach(col => { // E = Valor_NF, F = Valor_DT
+    const cell = ws[col + (R+1)];
+    if(cell && typeof cell.v === 'number'){
+      cell.t = 'n';
+      cell.z = '#,##0.00';
+    }
+  });
+}
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Despesas");
   XLSX.writeFile(wb, "despesas.xlsx");
