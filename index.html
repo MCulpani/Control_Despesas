@@ -568,32 +568,18 @@ function exportarExcel(){
       Fato_Gerador: d.fatoGerador || '',
       Observacoes: d.observacoes || '',
       Status: d.status || '',
-      Nota_Prestador: d.nota || '',
-      Formulario_Custo: d.pag || '',
-      Racional_Custo: d.neg || ''
+      Nota_Prestador: d.nota ? 'ANEXADO NO SISTEMA' : '',
+      Formulario_Custo: d.pag ? 'ANEXADO NO SISTEMA' : '',
+      Racional_Custo: d.neg ? 'ANEXADO NO SISTEMA' : ''
     });
   });
 
   const ws = XLSX.utils.json_to_sheet(dadosExcel);
-
-  const range = XLSX.utils.decode_range(ws['!ref']);
-
-  // Colunas dos anexos: Q, R, S
-  for(let R = 1; R <= range.e.r; ++R){
-    ['Q','R','S'].forEach(col => {
-      const cell = ws[col + (R+1)];
-      if(cell && cell.v && String(cell.v).startsWith('data:')){
-        const url = cell.v;
-        cell.f = `HYPERLINK("${url}","Abrir")`;
-        delete cell.v; // deixa só a fórmula
-      }
-    });
-  }
-
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Despesas");
   XLSX.writeFile(wb, "despesas.xlsx");
 }
+  
 function exportarPDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("l","pt","a4");
