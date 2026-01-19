@@ -606,7 +606,6 @@ function exportarPDF(){
     const ma = mesAno(d.dataVencimento);
     const qz = quinzena(d.dataVencimento);
 
-    // Quebra por mês
     if(ma !== mesAtual){
       mesAtual = ma;
       quinzenaAtual = '';
@@ -615,7 +614,6 @@ function exportarPDF(){
       ]);
     }
 
-    // Quebra por quinzena
     if(qz !== quinzenaAtual){
       quinzenaAtual = qz;
       body.push([
@@ -629,10 +627,10 @@ function exportarPDF(){
       d.numeroDT||'', dataBR(d.dataVencimento), d.cliente||'',
       d.tipoServico||'', d.embutimento||'', d.motivo||'',
       d.fatoGerador||'', d.observacoes||'', d.status||'',
-      d.nota ? 'Abrir' : '',
-      d.pag ? 'Abrir' : '',
-      d.neg ? 'Abrir' : '',
-      '' // ações (vazio no PDF)
+      d.nota ? { content:"Abrir", link:d.nota } : '',
+      d.pag  ? { content:"Abrir", link:d.pag  } : '',
+      d.neg  ? { content:"Abrir", link:d.neg  } : '',
+      ''
     ]);
   });
 
@@ -646,30 +644,12 @@ function exportarPDF(){
       "Obs.","Status","Nota","Form. Custo","Racional",""
     ]],
     body,
-    styles:{ fontSize:7, cellPadding:3 },
-    didDrawCell: function(data){
-      const col = data.column.index;
-      const row = data.row.raw;
-
-      // Colunas de anexos: 16,17,18
-      if([16,17,18].includes(col) && data.cell.text[0] === 'Abrir'){
-        const idx = data.row.index;
-        const registro = lista.filter(r => r.dataVencimento)[idx];
-
-        let url = '';
-        if(col===16) url = registro?.nota;
-        if(col===17) url = registro?.pag;
-        if(col===18) url = registro?.neg;
-
-        if(url){
-          doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
-        }
-      }
-    }
+    styles:{ fontSize:7, cellPadding:3 }
   });
 
   doc.save("despesas.pdf");
 }
+  
 function gerarCamposNF(){
   const qtd = parseInt(qtdNF.value || 0);
   listaNF.innerHTML = '';
