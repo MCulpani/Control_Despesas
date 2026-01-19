@@ -592,17 +592,26 @@ for(let R = 1; R <= range.e.r; ++R){
 }
 
 function base64ToBlob(base64, type='application/pdf'){
-  const pure = base64.includes(',') ? base64.split(',')[1] : base64;
+  let pure = base64.trim();
+
+  // Remove prefixo data:
+  if(pure.startsWith('data:')){
+    pure = pure.split(',')[1];
+  }
+
+  // Remove quebras de linha e espaços
+  pure = pure.replace(/\s/g, '');
+
   const byteChars = atob(pure);
   const byteNums = new Array(byteChars.length);
   for(let i=0;i<byteChars.length;i++){
     byteNums[i] = byteChars.charCodeAt(i);
   }
+
   return new Blob([new Uint8Array(byteNums)], { type });
 }
   
 async function exportarPDF(){
-  alert("Cliquei em Exportar PDF");
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("l","pt","a4");
   const zip = new JSZip();
