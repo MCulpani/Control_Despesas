@@ -594,13 +594,75 @@ for(let R = 1; R <= range.e.r; ++R){
 function exportarPDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("l","pt","a4");
-  const cols = ["Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT","Venc.","Cliente","Serviço","Status"];
-  const rows = despesas.map(d => [
-    d.filial,d.razao,d.nfCliente,d.uf,d.valorNFS,d.valorDT,d.tipoVeiculo,
-    d.numeroDT,d.dataVencimento,d.cliente,d.tipoServico,d.status
-  ]);
-  doc.text("Relatório de Despesas",40,30);
-  doc.autoTable({ head:[cols], body:rows, startY:50, styles:{fontSize:8} });
+
+  const lista = aplicarFiltros(despesas)
+    .sort((a,b) => (a.dataVencimento || '').localeCompare(b.dataVencimento || ''));
+
+  let y = 30;
+  let mesAtual = '';
+  let quinzenaAtual = '';
+
+  doc.setFontSize(12);
+  doc.text("Relatório de Despesas", 40, 20);
+
+  lista.forEach(d => {
+    const ma = mesAno(d.dataVencimento);
+    const qz = quinzena(d.dataVencimento);
+
+    // Quebra por Mês
+    if(ma !== mesAtual){
+      mesAtual = ma;
+      quinzenaAtual = '';
+      y += 20;
+      doc.setFontSize(11);
+      doc.setTextColor(56,189,248);
+      doc.text(ma || 'Sem data', 40, y);
+      y += 10;
+    }
+
+    // Quebra por Quinzena
+    if(qz !== quinzenaAtual){
+      quinzenaAtual = qz;
+      doc.setFontSize(10);
+      doc.setTextColor(165,243,252);
+      doc.text(qz, 50, y);
+      y += 10;
+    }
+
+    doc.setFontSize(8);
+    doc.setTextColor(255,255,255);
+
+    const linha = `
+${d.filial} | ${d.razao} | NF: ${d.nfCliente} | ${dataBR(d.dataVencimento)} 
+Valor NF: ${moedaBR(d.valorNFS)} | Valor DT: ${moedaBR(d.valorDT)} | ${d.tipoServico} | ${d.status}
+`;
+
+    doc.text(linha, 60, y);
+    y += 12;
+
+    // Links dos anexos
+    let linkX = 60;
+
+    if(d.nota){
+      doc.textWithLink("Nota Prestador", linkX, y, { url: d.nota });
+      linkX += 90;
+    }
+    if(d.pag){
+      doc.textWithLink("Formulário Custo", linkX, y, { url: d.pag });
+      linkX += 100;
+    }
+    if(d.neg){
+      doc.textWithLink("Racional Custo", linkX, y, { url: d.neg });
+    }
+
+    y += 14;
+
+    if(y > 550){
+      doc.addPage();
+      y = 40;
+    }
+  });
+
   doc.save("despesas.pdf");
 }
 
