@@ -529,12 +529,74 @@ ${edit?
 }
 
 function exportarExcel(){
-  const ws = XLSX.utils.json_to_sheet(despesas.map(d => ({
-    Filial: d.filial, Razao: d.razao, NF: d.nfCliente, UF: d.uf, Valor_NF: d.valorNFS,
-    Valor_DT: d.valorDT, Veiculo: d.tipoVeiculo, DT: d.numeroDT, Vencimento: d.dataVencimento,
-    Cliente: d.cliente, Servico: d.tipoServico, Embutimento: d.embutimento, Motivo: d.motivo,
-    Fato_Gerador: d.fatoGerador, Observacoes: d.observacoes, Status: d.status
-  })));
+  // Usa exatamente a mesma lista filtrada e ordenada da tela
+  const lista = aplicarFiltros(despesas)
+    .sort((a,b) => (a.dataVencimento || '').localeCompare(b.dataVencimento || ''));
+
+  const dadosExcel = [];
+
+  let mesAtual = '';
+  let quinzenaAtual = '';
+
+  lista.forEach(d => {
+    const ma = mesAno(d.dataVencimento);
+    const qz = quinzena(d.dataVencimento);
+
+    // Quebra por Mês
+    if(ma !== mesAtual){
+      mesAtual = ma;
+      quinzenaAtual = '';
+      dadosExcel.push({ 
+        Filial: `==== ${ma} ====`
+      });
+    }
+
+    // Quebra por Quinzena
+    if(qz !== quinzenaAtual){
+      quinzenaAtual = qz;
+      dadosExcel.push({ 
+        Filial: `-- ${qz} --`
+      });
+    }
+
+    // Linha real de dados
+    dadosExcel.push({
+      Filial: d.filial || '',
+      Razao: d.razao || '',
+      NF: d.nfCliente || '',
+      UF: d.uf || '',
+      Valor_NF: d.valorNFS || '',
+      Valor_DT: d.valorDT || '',
+      Veiculo: d.tipoVeiculo || '',
+      DT: d.numeroDT || '',
+      Vencimento: dataBR(d.dataVencimento),
+      Cliente: d.cliente || '',
+      Servico: d.tipoServico || '',
+      Embutimento: d.embutimento || '',
+      Motivo: d.motivo || '',
+      Fato_Gerador: d.fatoGerador || '',
+      Observacoes: d.observacoes || '',
+      Status: d.status || '',
+      Nota_Prestador: d.nota || '',
+      Formulario_Custo: d.pag || '',
+      Racional_Custo: d.neg || ''
+    });
+  });
+
+  const ws = XLSX.utils.json_to_sheet(dadosExcel, { skipHeader:false });
+
+  // Transforma colunas de anexos em hiperlinks
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for(let R = 1; R <= range.e.r; ++R){
+    ['Q','R','S'].forEach(col => { 
+      const cell = ws[col + (R+1)];
+      if(cell && cell.v && String(cell.v).startsWith('data:')){
+        cell.l = { Target: cell.v, Tooltip: "Abrir anexo" };
+        cell.v = 'Abrir';
+      }
+    });
+  }
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Despesas");
   XLSX.writeFile(wb, "despesas.xlsx");
