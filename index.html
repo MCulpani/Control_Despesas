@@ -393,9 +393,34 @@ function cell(v,i){return `<input data-row="${i}" value="${v||''}">`}
 
 function render(){
   tbody.innerHTML='';
-  const listaFiltrada = aplicarFiltros(despesas);
-  listaFiltrada.forEach((d,i)=>{
+
+const listaFiltrada = aplicarFiltros(despesas)
+  .sort((a,b) => (a.dataVencimento || '').localeCompare(b.dataVencimento || ''));
+
+let mesAtual = '';
+
+listaFiltrada.forEach((d,i)=>{
+  const ma = mesAno(d.dataVencimento);
+
+  if(ma !== mesAtual){
+    mesAtual = ma;
+    tbody.innerHTML += `
+      <tr>
+        <td colspan="20" style="
+          background:#020617;
+          color:#38bdf8;
+          font-weight:bold;
+          text-align:left;
+          padding:10px;
+        ">
+          ${ma || 'Sem data'}
+        </td>
+      </tr>
+    `;
+  }
+
   const edit = editRow===i;
+
   tbody.innerHTML+=`<tr>
 <td>${edit?cell(d.filial,i):d.filial||''}</td>    
 <td>${edit?cell(d.razao,i):d.razao||''}</td>
@@ -430,7 +455,7 @@ ${edit?
  <button class="btn-sm del" onclick="excluir(${i})">Excluir</button>`}
 </td>
 </tr>`;
-  });
+});
 }
 
 function exportarExcel(){
@@ -526,6 +551,12 @@ function limparFiltros(){
   filtroServico.value = '';
   filtroFato.value = '';
   render();
+}
+
+  function mesAno(data){
+  if(!data) return '';
+  const [y,m] = data.split('-');
+  return `${m}/${y}`;
 }
   
 </script>
