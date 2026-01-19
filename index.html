@@ -392,28 +392,38 @@ function excluir(i){
 function cell(v,i){return `<input data-row="${i}" value="${v||''}">`}
 
 function render(){
-  tbody.innerHTML='';
+ tbody.innerHTML='';
 
 const listaFiltrada = aplicarFiltros(despesas)
   .sort((a,b) => (a.dataVencimento || '').localeCompare(b.dataVencimento || ''));
 
 let mesAtual = '';
+let quinzenaAtual = '';
 
 listaFiltrada.forEach((d,i)=>{
   const ma = mesAno(d.dataVencimento);
+  const qz = quinzena(d.dataVencimento);
 
+  // Quebra por MÊS
   if(ma !== mesAtual){
     mesAtual = ma;
+    quinzenaAtual = '';
     tbody.innerHTML += `
       <tr>
-        <td colspan="20" style="
-          background:#020617;
-          color:#38bdf8;
-          font-weight:bold;
-          text-align:left;
-          padding:10px;
-        ">
+        <td colspan="20" style="background:#020617;color:#38bdf8;font-weight:bold;padding:10px">
           ${ma || 'Sem data'}
+        </td>
+      </tr>
+    `;
+  }
+
+  // Quebra por QUINZENA
+  if(qz !== quinzenaAtual){
+    quinzenaAtual = qz;
+    tbody.innerHTML += `
+      <tr>
+        <td colspan="20" style="background:#0f172a;color:#a5f3fc;font-weight:bold;padding:8px 12px">
+          ${qz}
         </td>
       </tr>
     `;
@@ -557,6 +567,12 @@ function limparFiltros(){
   if(!data) return '';
   const [y,m] = data.split('-');
   return `${m}/${y}`;
+}
+
+function quinzena(data){
+  if(!data) return '';
+  const dia = parseInt(data.split('-')[2]);
+  return dia <= 15 ? '1° quinzena' : '2° quinzena';
 }
   
 </script>
