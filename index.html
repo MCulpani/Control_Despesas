@@ -152,29 +152,38 @@ window.addEventListener("DOMContentLoaded",()=>{
 <h3>Nova Despesa</h3>
 <div class="grid">
 <div>
-<label>Filial</label>
-<select id="filial">
-<option value="">Selecione</option>
-<option>JOI</option>
-<option>EAA</option>
-<option>RCO</option>
-<option>CAS</option>
-<option>CLM</option>
-</select>
+  <label>Filial</label>
+  <select id="filial">
+    <option value="">Selecione</option>
+    <option>JOI</option>
+    <option>EAA</option>
+    <option>RCO</option>
+    <option>CAS</option>
+    <option>CLM</option>
+  </select>
+</div>
+
 <div>
   <label>Razão Social Prestador</label>
   <input id="razao">
 </div>
+
 <div>
   <label>Número NF</label>
   <input id="nfUnico">
 </div>
+
 <div>
   <label>Quantidade de DT</label>
   <input type="number" id="qtdDT" min="1" oninput="gerarCamposDT()">
 </div>
+
 <div id="listaDT" class="col-2"></div>
-<div><label>UF</label><input id="uf"></div>
+
+<div>
+  <label>UF</label>
+  <input id="uf">
+</div>
 <div><label>Valor da NF-s</label><input id="valorNFS" oninput="formatarMoeda(this)"></div>
 <div><label>Valor por DT</label><input id="valorDT" oninput="formatarMoeda(this)"></div>
 <div><label>Tipo de veículo</label>
