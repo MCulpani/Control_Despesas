@@ -148,6 +148,9 @@ window.addEventListener("DOMContentLoaded",()=>{
 
 <main>
 
+<button onclick="escolherPasta()">Escolher pasta de anexos</button>
+<span id="pastaInfo" style="margin-left:10px;font-size:12px;color:#9ca3af"></span>  
+  
 <section id="cadastro" class="card">
 <h3>Nova Despesa</h3>
 <div class="grid">
@@ -364,6 +367,8 @@ window.addEventListener("DOMContentLoaded",()=>{
 </div>
 
 <script>
+let pastaHandle = null;
+let pastaNome = '';  
 let despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
 let editRow = null;
 const cadastro = document.getElementById('cadastro');
@@ -397,9 +402,9 @@ async function salvar(){
   const valorTotal = parseFloat(valorNFS.value.replace(/\./g,'').replace(',','.')) || 0;
   const valorRateado = (valorTotal / dts.length).toFixed(2);
 
-  const n = await lerArquivo(nota.files[0]);
-  const p = compPag.files[0] ? await lerArquivo(compPag.files[0]) : null;
-  const ne = compNeg.files[0] ? await lerArquivo(compNeg.files[0]) : null;
+const n = nota.files[0] ? await salvarNaPasta(nota.files[0]) : null;
+const p = compPag.files[0] ? await salvarNaPasta(compPag.files[0]) : null;
+const ne = compNeg.files[0] ? await salvarNaPasta(compNeg.files[0]) : null;
 
   dts.forEach((inputDT, idx) => {
   despesas.push({
@@ -736,16 +741,20 @@ function gerarCamposDT(){
   }
 }
   
-  function abrirArquivo(base64){
-  const win = window.open();
-  win.document.write(`
-    <html>
-      <head><title>Documento</title></head>
-      <body style="margin:0">
-        <embed src="${base64}" type="application/pdf" width="100%" height="100%"/>
-      </body>
-    </html>
-  `);
+ async function abrirArquivo(nomeArquivo){
+  if(!pastaHandle){
+    alert('Selecione primeiro a pasta de anexos.');
+    return;
+  }
+
+  try{
+    const handle = await pastaHandle.getFileHandle(nomeArquivo);
+    const file = await handle.getFile();
+    const url = URL.createObjectURL(file);
+    window.open(url, '_blank');
+  }catch(e){
+    alert('Arquivo não encontrado na pasta.');
+  }
 }
 
   function formatarMoeda(campo){
@@ -860,6 +869,27 @@ function recalcularGrupo(indexLinha) {
   despesas[i].valorNFS = soma.toFixed(2);
 
   localStorage.setItem('despesas', JSON.stringify(despesas));
+}
+
+  async function escolherPasta(){
+  try{
+    pastaHandle = await window.showDirectoryPicker();
+    pastaNome = pastaHandle.name;
+    document.getElementById('pastaInfo').textContent = 'Pasta: ' + pastaNome;
+  }catch(e){
+    alert('Pasta não selecionada.');
+  }
+}
+
+async function salvarNaPasta(file){
+  if(!pastaHandle) return null;
+
+  const handle = await pastaHandle.getFileHandle(file.name, { create:true });
+  const writable = await handle.createWritable();
+  await writable.write(file);
+  await writable.close();
+
+  return file.name; // só salva o nome
 }
   
 </script>
