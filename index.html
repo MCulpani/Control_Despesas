@@ -410,7 +410,7 @@ async function salvar(){
       valorDT: valorRateado,
       tipoVeiculo: idx === 0 ? tipoVeiculo.value : '',
       numeroDT: inputDT.value,
-      dataVencimento: idx === 0 ? dataVencimento.value : '',
+      dataVencimento: dataVencimento.value,
       cliente: idx === 0 ? cliente.value : '',
       tipoServico: idx === 0 ? tipoServico.value : '',
       embutimento: idx === 0 ? embutimento.value : '',
@@ -524,7 +524,10 @@ listaFiltrada.forEach((d,i)=>{
 <td>${edit?cell(d.valorDT,i) : moedaBR(d.valorDT)}</td>
 <td>${edit?cell(d.tipoVeiculo,i):d.tipoVeiculo||''}</td>
 <td>${edit?cell(d.numeroDT,i):d.numeroDT||''}</td>
-<td>${edit?cell(d.dataVencimento,i):dataBR(d.dataVencimento)}</td>
+<td>${edit
+  ? cell(d.dataVencimento,i)
+  : (d.dataVencimento && d.nfCliente ? dataBR(d.dataVencimento) : '')
+}</td>
 <td>${edit?cell(d.cliente,i):d.cliente||''}</td>
 <td>${edit?cell(d.tipoServico,i):d.tipoServico||''}</td>
 <td>${edit?cell(d.embutimento,i):d.embutimento||''}</td>
