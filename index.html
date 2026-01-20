@@ -402,9 +402,29 @@ async function salvar(){
   const valorTotal = parseFloat(valorNFS.value.replace(/\./g,'').replace(',','.')) || 0;
   const valorRateado = (valorTotal / dts.length).toFixed(2);
 
-const n = nota.files[0] ? await salvarNaPasta(nota.files[0]) : null;
-const p = compPag.files[0] ? await salvarNaPasta(compPag.files[0]) : null;
-const ne = compNeg.files[0] ? await salvarNaPasta(compNeg.files[0]) : null;
+const nf = nfUnico.value;
+const fil = filial.value;
+
+const n = nota.files[0]
+  ? await salvarNaPasta(
+      nota.files[0],
+      `NF Recibo prestador - ${nf} - ${fil}`
+    )
+  : null;
+
+const p = compPag.files[0]
+  ? await salvarNaPasta(
+      compPag.files[0],
+      `Forms custo - ${nf} - ${fil}`
+    )
+  : null;
+
+const ne = compNeg.files[0]
+  ? await salvarNaPasta(
+      compNeg.files[0],
+      `Racional - ${nf} - ${fil}`
+    )
+  : null;
 
   dts.forEach((inputDT, idx) => {
   despesas.push({
@@ -881,15 +901,19 @@ function recalcularGrupo(indexLinha) {
   }
 }
 
-async function salvarNaPasta(file){
+async function salvarNaPasta(file, nomePersonalizado){
   if(!pastaHandle) return null;
 
-  const handle = await pastaHandle.getFileHandle(file.name, { create:true });
+  // mantém a extensão original
+  const ext = file.name.split('.').pop();
+  const nomeFinal = `${nomePersonalizado}.${ext}`;
+
+  const handle = await pastaHandle.getFileHandle(nomeFinal, { create:true });
   const writable = await handle.createWritable();
   await writable.write(file);
   await writable.close();
 
-  return file.name; // só salva o nome
+  return nomeFinal; // salva só o nome final
 }
   
 </script>
