@@ -233,8 +233,8 @@ window.addEventListener("DOMContentLoaded",()=>{
 <div class="col-3"><label>Observações</label><input id="observacoes"></div>
 <div><label>Status</label>
 <select id="status">
-<option>Pendente</option>
-<option>Aprovado</option>
+  <option value="Pendente">Pendente</option>
+  <option value="Aprovado">Aprovado</option>
 </select>
 </div>
 <div><label>Nota Fiscal/Recibo</label><input type="file" id="nota"></div>
@@ -368,7 +368,8 @@ let despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
 let editRow = null;
 const cadastro = document.getElementById('cadastro');
 const despesasSec = document.getElementById('despesas');
-
+const status = document.getElementById('status'); // <<< ESSENCIAL
+  
 function mostrar(id){
   cadastro.style.display='none';
   despesasSec.style.display='none';
