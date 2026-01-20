@@ -446,18 +446,24 @@ function cancelar(){ editRow=null; render(); }
 
 function salvarLinha(i){
   const row = document.querySelectorAll('[data-row="'+i+'"]');
-  const keys = ['filial','razao','nfCliente','uf','valorNFS','valorDT',
-                'tipoVeiculo','numeroDT','dataVencimento','cliente',
-                'tipoServico','embutimento','motivo','fatoGerador',
-                'observacoes','status'];
 
-  keys.forEach((k,idx)=>{
-    despesas[i][k] = row[idx].value;
+  const keys = [
+    'filial','razao','nfCliente','uf','valorNFS','valorDT',
+    'tipoVeiculo','numeroDT','dataVencimento','cliente',
+    'tipoServico','embutimento','motivo','fatoGerador',
+    'observacoes','status'
+  ];
+
+  let col = 0;
+  keys.forEach(k=>{
+    // Se não existe campo na tela para essa coluna, não altera o valor
+    if(row[col]){
+      despesas[i][k] = row[col].value;
+      col++;
+    }
   });
 
-  // Se mexeu no Valor DT, recalcula a NF
   recalcularGrupo(i);
-
   localStorage.setItem('despesas', JSON.stringify(despesas));
   editRow = null;
   render();
