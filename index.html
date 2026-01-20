@@ -193,7 +193,6 @@ window.addEventListener("DOMContentLoaded",()=>{
 <option>N/A</option>
 </select>
 </div>
-<div><label>Número DT</label><input id="numeroDT"></div>
 <div><label>Data Vencimento</label><input type="date" id="dataVencimento" onclick="this.showPicker()"></div>
 <div class="col-2"><label>Cliente</label><input id="cliente"></div>
 <div class="col-2">
@@ -387,21 +386,16 @@ function lerArquivo(file){
 }
 
 async function salvar(){
-  // valida NF
   if(!nfUnico.value){ alert('Informe o número da NF'); return; }
 
-  // valida DTs
   const dts = document.querySelectorAll('.dt-item');
-  if(dts.length === 0){ alert('Informe a quantidade e os números das DTs'); return; }
+  if(dts.length === 0){ alert('Informe os números das DTs'); return; }
 
-  // valida nota fiscal
   if(!nota.files[0]){ alert('Anexe a nota fiscal'); return; }
 
-  // valores
   const valorTotal = parseFloat(valorNFS.value.replace(/\./g,'').replace(',','.')) || 0;
   const valorRateado = (valorTotal / dts.length).toFixed(2);
 
-  // arquivos
   const n = await lerArquivo(nota.files[0]);
   const p = compPag.files[0] ? await lerArquivo(compPag.files[0]) : null;
   const ne = compNeg.files[0] ? await lerArquivo(compNeg.files[0]) : null;
@@ -412,8 +406,8 @@ async function salvar(){
       razao: idx === 0 ? razao.value : '',
       nfCliente: idx === 0 ? nfUnico.value : '',
       uf: idx === 0 ? uf.value : '',
-      valorNFS: idx === 0 ? valorTotal : '',      // total NF na primeira linha
-      valorDT: valorRateado,                      // rateio em todas as linhas
+      valorNFS: idx === 0 ? valorTotal : '',
+      valorDT: valorRateado,
       tipoVeiculo: idx === 0 ? tipoVeiculo.value : '',
       numeroDT: inputDT.value,
       dataVencimento: idx === 0 ? dataVencimento.value : '',
@@ -708,7 +702,7 @@ function gerarCamposDT(){
     listaDT.innerHTML += `
       <div style="margin-bottom:6px">
         <label>DT ${i}</label>
-        <input class="dt-item">
+        <input class="dt-item" placeholder="Informe o número da DT">
       </div>`;
   }
 }
