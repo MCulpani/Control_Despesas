@@ -164,8 +164,8 @@ window.addEventListener("DOMContentLoaded",()=>{
 </div>
 <div><label>Razão Social Prestador</label><input id="razao"></div>
 <div>
-<label>Quantidade de NF</label>
-<input type="number" id="qtdNF" min="1" oninput="gerarCamposNF()">
+<label>Quantidade de DT</label>
+<input type="number" id="qtdDT" min="1" oninput="gerarCamposDT()">
 </div>
 <div id="listaNF" class="col-2"></div>
 <div><label>UF</label><input id="uf"></div>
@@ -337,7 +337,7 @@ window.addEventListener("DOMContentLoaded",()=>{
 <table>
 <thead>
 <tr>
-<th>Filial</th><th>Razão</th><th>NF</th><th>UF</th><th>Valor NF</th><th>Valor DT</th>
+<th>Filial</th><th>Razão</th><th>NF</th><th>UF</th><th>Valor DT</th><th>Valor NF</th>
 <th>Veículo</th><th>DT</th><th>Venc.</th><th>Cliente</th><th>Serviço</th>
 <th>Embutimento?</th><th>Motivo?</th><th>Fato Gerador</th><th>Observações</th>
 <th>Status</th><th>Nota Prestador</th><th>Formulário Custo</th><th>Racional Custo</th><th>Ações</th>
@@ -556,8 +556,8 @@ function exportarExcel(){
       Razao: d.razao || '',
       NF: d.nfCliente || '',
       UF: d.uf || '',
-      Valor_NF: Number(d.valorNFS || 0),
       Valor_DT: Number(d.valorDT || 0),
+      Valor_NF: Number(d.valorNFS || 0),
       Veiculo: d.tipoVeiculo || '',
       DT: d.numeroDT || '',
       Vencimento: dataBR(d.dataVencimento),
@@ -641,7 +641,7 @@ function exportarPDF(){
   doc.autoTable({
     startY: 50,
     head: [[
-      "Filial","Razão","NF","UF","Valor NF","Valor DT","Veículo","DT",
+      "Filial","Razão","NF","UF","Valor DT","Valor NF","Veículo","DT",
       "Venc.","Cliente","Serviço","Embut.","Motivo","Fato Gerador",
       "Obs.","Status","Nota","Form. Custo","Racional",""
     ]],
