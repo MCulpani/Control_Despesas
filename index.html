@@ -413,7 +413,7 @@ async function salvar(){
     despesas.push({
       filial: filial.value,
       razao: razao.value,
-      nfCliente: idx===0 ? nfUnico.value : '', // NF só aparece na primeira DT
+      nfCliente: idx === 0 ? nfUnico.value : '', // NF só aparece na primeira DT
       uf: uf.value,
       valorNFS: valorRateado,
       valorDT: valorDTnum.toFixed(2),
@@ -433,20 +433,21 @@ async function salvar(){
     });
   });
 
-  // salvar localStorage
+  // salva no localStorage
   localStorage.setItem('despesas', JSON.stringify(despesas));
   despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
 
+  // renderiza a aba despesas
   mostrar('despesas');
   render();
 
   alert('Despesa salva com sucesso (rateada por DT)');
   novaDespesa();
 }
-
+  
 function novaDespesa(){
   const campos = document.querySelectorAll('#cadastro input, #cadastro select');
-  campos.forEach(c=>{ c.value = ''; });
+  campos.forEach(c => { c.value = ''; });
   listaDT.innerHTML = '';
   razao.focus();
 }
