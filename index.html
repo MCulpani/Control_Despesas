@@ -72,25 +72,18 @@ a{color:#38bdf8;text-decoration:none}
 
 <!-- Firebase Login -->
 <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyCG_7wihJW2uI7pPgTR7bfQAKXYowQiyaA",
-    authDomain: "conciliacao-caixa.firebaseapp.com",
-    databaseURL: "https://conciliacao-caixa-default-rtdb.firebaseio.com",
-    projectId: "conciliacao-caixa",
-    storageBucket: "conciliacao-caixa.firebasestorage.app",
-    messagingSenderId: "996496087548",
-    appId: "1:996496087548:web:48750e4ed277e0ec9ffa79"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyC_FD33WikHRUVCd2JtH_ok3WF1YtfAFhU",
+  authDomain: "conversor-de-avisos.firebaseapp.com",
+  projectId: "conversor-de-avisos",
+  storageBucket: "conversor-de-avisos.firebasestorage.app",
+  messagingSenderId: "1099286231450",
+  appId: "1:1099286231450:web:94e0b02dec2ef6b0d26223"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
 window.addEventListener("DOMContentLoaded",()=>{
   const loginBox = document.getElementById("login-area");
