@@ -545,12 +545,16 @@ listaFiltrada.forEach((d,i)=>{
 <td>${edit?cell(d.motivo,i):d.motivo||''}</td>
 <td>${edit?cell(d.fatoGerador,i):d.fatoGerador||''}</td>
 <td>${edit?cell(d.observacoes,i):d.observacoes||''}</td>
-<td>${edit?
-  `<select data-row="${i}">
-    <option ${d.status==='Pendente'?'selected':''}>Pendente</option>
-    <option ${d.status==='Aprovado'?'selected':''}>Aprovado</option>
-  </select>`:
-  `<span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span>`
+<td>${
+  d.status
+    ? (edit
+        ? `<select data-row="${i}">
+             <option ${d.status==='Pendente'?'selected':''}>Pendente</option>
+             <option ${d.status==='Aprovado'?'selected':''}>Aprovado</option>
+           </select>`
+        : `<span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span>`
+      )
+    : ''
 }</td>
 <td>${d.nota?`<button class="btn-sm edit" onclick="abrirArquivo('${d.nota}')">Abrir</button>`:'-'}</td>
 <td>${d.pag?`<button class="btn-sm edit" onclick="abrirArquivo('${d.pag}')">Abrir</button>`:'-'}</td>
