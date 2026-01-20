@@ -185,7 +185,6 @@ window.addEventListener("DOMContentLoaded",()=>{
   <input id="uf">
 </div>
 <div><label>Valor da NF-s</label><input id="valorNFS" oninput="formatarMoeda(this)"></div>
-<div><label>Valor por DT</label><input id="valorDT" oninput="formatarMoeda(this)"></div>
 <div><label>Tipo de veículo</label>
 <select id="tipoVeiculo">
 <option>Truck</option>
@@ -400,7 +399,6 @@ async function salvar(){
 
   // valores
   const valorTotal = parseFloat(valorNFS.value.replace(/\./g,'').replace(',','.')) || 0;
-  const valorDTnum = parseFloat(valorDT.value.replace(/\./g,'').replace(',','.')) || 0;
   const valorRateado = (valorTotal / dts.length).toFixed(2);
 
   // arquivos
@@ -408,36 +406,33 @@ async function salvar(){
   const p = compPag.files[0] ? await lerArquivo(compPag.files[0]) : null;
   const ne = compNeg.files[0] ? await lerArquivo(compNeg.files[0]) : null;
 
-  // criar despesas por DT
   dts.forEach((inputDT, idx) => {
     despesas.push({
-      filial: filial.value,
-      razao: razao.value,
-      nfCliente: idx === 0 ? nfUnico.value : '', // NF só aparece na primeira DT
-      uf: uf.value,
-      valorNFS: valorRateado,
-      valorDT: valorDTnum.toFixed(2),
-      tipoVeiculo: tipoVeiculo.value,
+      filial: idx === 0 ? filial.value : '',
+      razao: idx === 0 ? razao.value : '',
+      nfCliente: idx === 0 ? nfUnico.value : '',
+      uf: idx === 0 ? uf.value : '',
+      valorNFS: idx === 0 ? valorTotal : '',      // total NF na primeira linha
+      valorDT: valorRateado,                      // rateio em todas as linhas
+      tipoVeiculo: idx === 0 ? tipoVeiculo.value : '',
       numeroDT: inputDT.value,
-      dataVencimento: dataVencimento.value,
-      cliente: cliente.value,
-      tipoServico: tipoServico.value,
-      embutimento: embutimento.value,
-      motivo: motivo.value,
-      fatoGerador: fatoGerador.value,
-      observacoes: observacoes.value,
-      status: document.getElementById('status').value,
+      dataVencimento: idx === 0 ? dataVencimento.value : '',
+      cliente: idx === 0 ? cliente.value : '',
+      tipoServico: idx === 0 ? tipoServico.value : '',
+      embutimento: idx === 0 ? embutimento.value : '',
+      motivo: idx === 0 ? motivo.value : '',
+      fatoGerador: idx === 0 ? fatoGerador.value : '',
+      observacoes: idx === 0 ? observacoes.value : '',
+      status: idx === 0 ? document.getElementById('status').value : '',
       nota: n,
       pag: p,
       neg: ne
     });
   });
 
-  // salva no localStorage
   localStorage.setItem('despesas', JSON.stringify(despesas));
   despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
 
-  // renderiza a aba despesas
   mostrar('despesas');
   render();
 
@@ -531,8 +526,8 @@ listaFiltrada.forEach((d,i)=>{
 <td>${edit?cell(d.razao,i):d.razao||''}</td>
 <td>${edit?cell(d.nfCliente,i):d.nfCliente||''}</td>
 <td>${edit?cell(d.uf,i):d.uf||''}</td>
-<td>${edit?cell(d.valorNFS,i):moedaBR(d.valorNFS)}</td>
-<td>${edit?cell(d.valorDT,i):moedaBR(d.valorDT)}</td>
+<td>${edit?cell(d.valorNFS,i) : moedaBR(d.valorNFS)}</td>
+<td>${edit?cell(d.valorDT,i) : moedaBR(d.valorDT)}</td>
 <td>${edit?cell(d.tipoVeiculo,i):d.tipoVeiculo||''}</td>
 <td>${edit?cell(d.numeroDT,i):d.numeroDT||''}</td>
 <td>${edit?cell(d.dataVencimento,i):dataBR(d.dataVencimento)}</td>
