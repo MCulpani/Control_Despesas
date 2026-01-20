@@ -546,17 +546,17 @@ listaFiltrada.forEach((d,i)=>{
 <td>${edit?cell(d.fatoGerador,i):d.fatoGerador||''}</td>
 <td>${edit?cell(d.observacoes,i):d.observacoes||''}</td>
 <td>
-  ${
-    d.status && d.status.trim() !== ''
-      ? (edit
-          ? `<select data-row="${i}">
-               <option ${d.status==='Pendente'?'selected':''}>Pendente</option>
-               <option ${d.status==='Aprovado'?'selected':''}>Aprovado</option>
-             </select>`
-          : `<span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span>`
-        )
-      : ''
-  }
+${
+  d.nfCliente && d.status && d.status.trim() !== ''
+    ? (edit
+        ? `<select data-row="${i}">
+             <option ${d.status==='Pendente'?'selected':''}>Pendente</option>
+             <option ${d.status==='Aprovado'?'selected':''}>Aprovado</option>
+           </select>`
+        : `<span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span>`
+      )
+    : ''
+}
 </td>
 <td>${d.nota?`<button class="btn-sm edit" onclick="abrirArquivo('${d.nota}')">Abrir</button>`:'-'}</td>
 <td>${d.pag?`<button class="btn-sm edit" onclick="abrirArquivo('${d.pag}')">Abrir</button>`:'-'}</td>
@@ -595,19 +595,7 @@ function exportarExcel(){
       dadosExcel.push({ Filial: `-- ${qz} --` });
     }
 
-    dadosExcel.push({<td>
-  ${
-    d.status && d.status.trim() !== ''
-      ? (edit
-          ? `<select data-row="${i}">
-               <option ${d.status==='Pendente'?'selected':''}>Pendente</option>
-               <option ${d.status==='Aprovado'?'selected':''}>Aprovado</option>
-             </select>`
-          : `<span class="badge ${d.status==='Aprovado'?'ok':'pending'}">${d.status}</span>`
-        )
-      : ''
-  }
-</td>
+    dadosExcel.push({
       Filial: d.filial || '',
       Razao: d.razao || '',
       NF: d.nfCliente || '',
@@ -631,17 +619,19 @@ function exportarExcel(){
   });
 
   const ws = XLSX.utils.json_to_sheet(dadosExcel);
+
   // Força formato numérico com 2 casas decimais
-const range = XLSX.utils.decode_range(ws['!ref']);
-for(let R = 1; R <= range.e.r; ++R){
-  ['E','F'].forEach(col => { // E = Valor_NF, F = Valor_DT
-    const cell = ws[col + (R+1)];
-    if(cell && typeof cell.v === 'number'){
-      cell.t = 'n';
-      cell.z = '#,##0.00';
-    }
-  });
-}
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for(let R = 1; R <= range.e.r; ++R){
+    ['E','F'].forEach(col => { // E = Valor_NF, F = Valor_DT
+      const cell = ws[col + (R+1)];
+      if(cell && typeof cell.v === 'number'){
+        cell.t = 'n';
+        cell.z = '#,##0.00';
+      }
+    });
+  }
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Despesas");
   XLSX.writeFile(wb, "despesas.xlsx");
