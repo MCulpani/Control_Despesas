@@ -161,8 +161,14 @@ window.addEventListener("DOMContentLoaded",()=>{
 <option>CAS</option>
 <option>CLM</option>
 </select>
+<div>
+  <label>Razão Social Prestador</label>
+  <input id="razao">
 </div>
-<div><label>Razão Social Prestador</label><input id="razao"></div>
+<div>
+  <label>Número NF</label>
+  <input id="nfUnico">
+</div>
 <div>
   <label>Quantidade de DT</label>
   <input type="number" id="qtdDT" min="1" oninput="gerarCamposDT()">
@@ -373,19 +379,27 @@ function lerArquivo(file){
 }
 
 async function salvar(){
-  if(!nota.files[0]){ alert('Anexe a nota fiscal'); return; }
+  // valida NF
+  if(!nfUnico.value){ alert('Informe o número da NF'); return; }
 
+  // valida DTs
   const dts = document.querySelectorAll('.dt-item');
   if(dts.length === 0){ alert('Informe a quantidade e os números das DTs'); return; }
 
+  // valida nota fiscal
+  if(!nota.files[0]){ alert('Anexe a nota fiscal'); return; }
+
+  // valores
   const valorTotal = parseFloat(valorNFS.value.replace(/\./g,'').replace(',','.')) || 0;
   const valorDTnum = parseFloat(valorDT.value.replace(/\./g,'').replace(',','.')) || 0;
   const valorRateado = (valorTotal / dts.length).toFixed(2);
 
+  // arquivos
   const n = await lerArquivo(nota.files[0]);
   const p = compPag.files[0] ? await lerArquivo(compPag.files[0]) : null;
   const ne = compNeg.files[0] ? await lerArquivo(compNeg.files[0]) : null;
 
+  // criar despesas por DT
   dts.forEach((inputDT, idx) => {
     despesas.push({
       filial: filial.value,
@@ -410,6 +424,7 @@ async function salvar(){
     });
   });
 
+  // salvar localStorage
   localStorage.setItem('despesas', JSON.stringify(despesas));
   despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
 
@@ -426,7 +441,7 @@ function novaDespesa(){
   listaDT.innerHTML = '';
   razao.focus();
 }
-
+  
 function editar(i){ editRow=i; render(); }
 function cancelar(){ editRow=null; render(); }
 
