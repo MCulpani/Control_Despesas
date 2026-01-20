@@ -164,10 +164,10 @@ window.addEventListener("DOMContentLoaded",()=>{
 </div>
 <div><label>Razão Social Prestador</label><input id="razao"></div>
 <div>
-<label>Quantidade de NF</label>
-<input type="number" id="qtdNF" min="1" oninput="gerarCamposNF()">
+  <label>Quantidade de DT</label>
+  <input type="number" id="qtdDT" min="1" oninput="gerarCamposDT()">
 </div>
-<div id="listaNF" class="col-2"></div>
+<div id="listaDT" class="col-2"></div>
 <div><label>UF</label><input id="uf"></div>
 <div><label>Valor da NF-s</label><input id="valorNFS" oninput="formatarMoeda(this)"></div>
 <div><label>Valor por DT</label><input id="valorDT" oninput="formatarMoeda(this)"></div>
@@ -372,48 +372,58 @@ function lerArquivo(file){
   });
 }
 
-function salvar(){
+async function salvar(){
   if(!nota.files[0]){ alert('Anexe a nota fiscal'); return; }
-  const nfs = document.querySelectorAll('.nf-item');
-  if(nfs.length === 0){ alert('Informe a quantidade e os números das NFs'); return; }
-  const valorTotal = parseFloat(
-  valorNFS.value.replace(/\./g,'').replace(',','.') || 0
-);
-  const valorDTnum = parseFloat(
-  valorDT.value.replace(/\./g,'').replace(',','.') || 0
-);
-  const valorRateado = (valorTotal / nfs.length).toFixed(2);
-  const statusSelecionado = document.getElementById('status').value;
 
-  Promise.all([ lerArquivo(nota.files[0]), lerArquivo(compPag.files[0]), lerArquivo(compNeg.files[0]) ])
-  .then(([n,p,ne])=>{
-    nfs.forEach(inputNF=>{
-      despesas.push({
-        filial:filial.value, razao:razao.value, nfCliente:inputNF.value, uf:uf.value,
-        valorNFS:valorRateado, valorDT:valorDTnum.toFixed(2), tipoVeiculo:tipoVeiculo.value,
-        numeroDT:numeroDT.value, dataVencimento:dataVencimento.value, cliente:cliente.value,
-        tipoServico:tipoServico.value, embutimento:embutimento.value, motivo:motivo.value,
-        fatoGerador:fatoGerador.value, observacoes:observacoes.value, status: document.getElementById('status').value,
-        nota:n, pag:p, neg:ne
-      });
+  const dts = document.querySelectorAll('.dt-item');
+  if(dts.length === 0){ alert('Informe a quantidade e os números das DTs'); return; }
+
+  const valorTotal = parseFloat(valorNFS.value.replace(/\./g,'').replace(',','.')) || 0;
+  const valorDTnum = parseFloat(valorDT.value.replace(/\./g,'').replace(',','.')) || 0;
+  const valorRateado = (valorTotal / dts.length).toFixed(2);
+
+  const n = await lerArquivo(nota.files[0]);
+  const p = compPag.files[0] ? await lerArquivo(compPag.files[0]) : null;
+  const ne = compNeg.files[0] ? await lerArquivo(compNeg.files[0]) : null;
+
+  dts.forEach((inputDT, idx) => {
+    despesas.push({
+      filial: filial.value,
+      razao: razao.value,
+      nfCliente: idx===0 ? nfUnico.value : '', // NF só aparece na primeira DT
+      uf: uf.value,
+      valorNFS: valorRateado,
+      valorDT: valorDTnum.toFixed(2),
+      tipoVeiculo: tipoVeiculo.value,
+      numeroDT: inputDT.value,
+      dataVencimento: dataVencimento.value,
+      cliente: cliente.value,
+      tipoServico: tipoServico.value,
+      embutimento: embutimento.value,
+      motivo: motivo.value,
+      fatoGerador: fatoGerador.value,
+      observacoes: observacoes.value,
+      status: document.getElementById('status').value,
+      nota: n,
+      pag: p,
+      neg: ne
     });
-    localStorage.setItem('despesas',JSON.stringify(despesas));
-    
-// RECARREGA DA MEMÓRIA DO NAVEGADOR
-despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
-
-// MOSTRA E RENDERIZA DE NOVO
-mostrar('despesas');
-render();
-
-alert('Despesa salva com sucesso (rateada)');
-novaDespesa();
   });
+
+  localStorage.setItem('despesas', JSON.stringify(despesas));
+  despesas = JSON.parse(localStorage.getItem('despesas') || '[]');
+
+  mostrar('despesas');
+  render();
+
+  alert('Despesa salva com sucesso (rateada por DT)');
+  novaDespesa();
 }
 
 function novaDespesa(){
   const campos = document.querySelectorAll('#cadastro input, #cadastro select');
-  campos.forEach(c=>{ if(c.type === 'file') c.value = ''; else c.value = ''; });
+  campos.forEach(c=>{ c.value = ''; });
+  listaDT.innerHTML = '';
   razao.focus();
 }
 
@@ -671,14 +681,14 @@ function exportarPDF(){
   doc.save("despesas.pdf");
 }
 
-function gerarCamposNF(){
-  const qtd = parseInt(qtdNF.value || 0);
-  listaNF.innerHTML = '';
-  for(let i=1;i<=qtd;i++){
-    listaNF.innerHTML += `
+function gerarCamposDT(){
+  const qtd = parseInt(qtdDT.value || 0);
+  listaDT.innerHTML = '';
+  for(let i=1; i<=qtd; i++){
+    listaDT.innerHTML += `
       <div style="margin-bottom:6px">
-        <label>NF ${i}</label>
-        <input class="nf-item">
+        <label>DT ${i}</label>
+        <input class="dt-item">
       </div>`;
   }
 }
